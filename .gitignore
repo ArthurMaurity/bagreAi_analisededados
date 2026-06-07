@@ -1,0 +1,83 @@
+# --- Python ---
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+ENV/bin/
+venv/bin/
+.venv/bin/
+
+# Pip log
+pip-log.txt
+pip-delete-this-directory.txt
+
+# --- Banco de Dados / Banco Local ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Configurações Locais e Chaves (Segurança) ---
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.private
+
+# --- IDEs & Editores de Texto ---
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*~
+.project
+.pydevproject
+.settings/
+
+# --- Arquivos do Sistema Operacional ---
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# --- Arquivos Dinâmicos / Relatórios do Bagre.ai ---
+# Ignora relatórios e gráficos gerados automaticamente na raiz ou pasta static
+relatorio_scout.md
+comparativo_pedirato.png
+static/*.md
+static/*.png
+*.log
