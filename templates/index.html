@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bagre.ai - Central de Scouting & Eficiência Esportiva</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --card-bg: rgba(22, 25, 37, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary-gradient: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            --accent-green: #00e676;
+            --accent-orange: #ff9100;
+            --accent-red: #ff3d00;
+            --text-color: #f5f6fa;
+            --text-muted: #8b9bb4;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 242, 254, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(79, 172, 254, 0.05) 0%, transparent 40%);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        main {
+            max-width: 1200px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1.2fr 1.8fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: all 0.3s ease;
+        }
+
+        .panel-card:hover {
+            border-color: rgba(0, 242, 254, 0.25);
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #00f2fe;
+            padding-left: 0.75rem;
+        }
+
+        /* Search Autocomplete */
+        .search-container {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(11, 12, 16, 0.8);
+            border: 1px solid var(--card-border);
+            padding: 1rem 1.2rem;
+            border-radius: 12px;
+            color: var(--text-color);
+            font-size: 1.05rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #00f2fe;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.15);
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: #141722;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 0.9rem 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-item:hover {
+            background: rgba(0, 242, 254, 0.1);
+            color: #00f2fe;
+        }
+
+        .suggestion-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .suggestion-club {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+        }
+
+        /* Scout Result Card */
+        .scout-card {
+            background: linear-gradient(145deg, rgba(26, 31, 48, 0.9) 0%, rgba(18, 21, 33, 0.9) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 242, 254, 0.1);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .scout-card h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .scout-card .team {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-box {
+            background: rgba(11, 12, 16, 0.6);
+            border: 1px solid var(--card-border);
+            padding: 1rem;
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00f2fe;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.25rem;
+        }
+
+        .pedirato-badge {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .pedirato-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .pedirato-score {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .pedirato-green { color: var(--accent-green); }
+        .pedirato-orange { color: var(--accent-orange); }
+        .pedirato-red { color: var(--accent-red); }
+
+        .btn {
+            width: 100%;
+            background: var(--primary-gradient);
+            border: none;
+            padding: 1rem;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Comparison History */
+        .comparison-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .compare-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .compare-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 0.9rem 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .compare-item-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .compare-item-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .compare-item-pedirato {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+        }
+
+        .remove-btn {
+            background: transparent;
+            border: none;
+            color: var(--accent-red);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.2rem 0.5rem;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .remove-btn:hover {
+            background: rgba(255, 61, 0, 0.1);
+        }
+
+        /* Results Display */
+        .report-section {
+            grid-column: span 2;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @media (max-width: 900px) {
+            .report-section {
+                grid-column: span 1;
+            }
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .report-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1rem;
+            min-height: 300px;
+        }
+
+        .chart-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .markdown-container {
+            background: #11131c;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            overflow-y: auto;
+            max-height: 450px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .markdown-container h1 {
+            color: #00f2fe;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .markdown-container h2 {
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.8rem 0;
+            border-left: 3px solid #00f2fe;
+        }
+
+        .markdown-container table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .markdown-container th, .markdown-container td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .markdown-container th {
+            font-weight: 700;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #00f2fe;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Bagre.ai</h1>
+        <p>Motor Inteligente de Análise e Eficiência Esportiva (Índice PediRato)</p>
+    </header>
+
+    <main>
+        <!-- Coluna Esquerda: Busca & Resultado -->
+        <div class="panel-card" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <h2>Buscar Atleta</h2>
+            
+            <div class="search-container">
+                <div class="search-input-wrapper">
+                    <input type="text" id="player-search" class="search-input" placeholder="Digite o nome do jogador (ex: Dembele)..." autocomplete="off">
+                </div>
+                <div id="autocomplete-dropdown" class="autocomplete-dropdown"></div>
+            </div>
+
+            <div id="search-spinner" class="spinner"></div>
+
+            <!-- Card com Resultado do Scout -->
+            <div id="scout-card" class="scout-card">
+                <h3 id="card-name">Ousmane Dembélé</h3>
+                <div id="card-team" class="team">Paris Saint-Germain</div>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div id="stat-goals" class="stat-value">10</div>
+                        <div class="stat-label">Gols</div>
+                    </div>
+                    <div class="stat-box">
+                        <div id="stat-assists" class="stat-value">7</div>
+                        <div class="stat-label">Assists</div>
+                    </div>
+                    <div class="stat-box">
+                        <div id="stat-value" class="stat-value">€95.8M</div>
+                        <div class="stat-label">Valor</div>
+                    </div>
+                </div>
+
+                <div class="pedirato-badge">
+                    <div class="pedirato-title">Índice PediRato</div>
+                    <div id="pedirato-score" class="pedirato-score pedirato-green">0.18</div>
+                </div>
+
+                <button id="add-to-compare-btn" class="btn">Adicionar para Comparar</button>
+            </div>
+        </div>
+
+        <!-- Coluna Direita: Comparativo & Sessão -->
+        <div class="panel-card comparison-panel">
+            <h2>Comparador de Elenco</h2>
+            
+            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">
+                Pesquise e selecione atletas na barra ao lado para adicioná-los à fila de comparação abaixo. O relatório medirá a eficiência esportiva baseada na relação entre participações diretas em gols e o valor de mercado.
+            </p>
+
+            <ul id="compare-list" class="compare-list">
+                <li id="empty-list-msg" style="color: var(--text-muted); font-style: italic; text-align: center; padding: 1rem;">
+                    Nenhum jogador na fila de comparação.
+                </li>
+            </ul>
+
+            <button id="compare-btn" class="btn" style="margin-top: auto; display: none;">Comparar Atletas e Gerar Gráfico</button>
+            <div id="compare-spinner" class="spinner"></div>
+        </div>
+
+        <!-- Linha Inferior: Relatório Consolidado (Grid de 2 colunas expandido) -->
+        <div id="report-section" class="panel-card report-section">
+            <h2>Relatório Gerado</h2>
+            <div class="report-grid">
+                <div class="chart-container">
+                    <img id="chart-img" class="chart-img" src="" alt="Gráfico de Comparação">
+                </div>
+                <div id="markdown-container" class="markdown-container">
+                    <!-- Relatório formatado em HTML pelo JS -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE_URL = window.location.origin;
+
+        const searchInput = document.getElementById('player-search');
+        const dropdown = document.getElementById('autocomplete-dropdown');
+        const searchSpinner = document.getElementById('search-spinner');
+        
+        const scoutCard = document.getElementById('scout-card');
+        const cardName = document.getElementById('card-name');
+        const cardTeam = document.getElementById('card-team');
+        const statGoals = document.getElementById('stat-goals');
+        const statAssists = document.getElementById('stat-assists');
+        const statValue = document.getElementById('stat-value');
+        const pediratoScore = document.getElementById('pedirato-score');
+        const addToCompareBtn = document.getElementById('add-to-compare-btn');
+
+        const compareList = document.getElementById('compare-list');
+        const emptyListMsg = document.getElementById('empty-list-msg');
+        const compareBtn = document.getElementById('compare-btn');
+        const compareSpinner = document.getElementById('compare-spinner');
+
+        const reportSection = document.getElementById('report-section');
+        const chartImg = document.getElementById('chart-img');
+        const markdownContainer = document.getElementById('markdown-container');
+
+        let searchTimeout = null;
+        let selectedPlayer = null;
+        let comparisonGroup = [];
+
+        // 1. Escuta digitação para Autocomplete (com Debounce de 300ms)
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            const query = searchInput.value.trim();
+            
+            if (query.length < 3) {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(async () => {
+                dropdown.style.display = 'none';
+                searchSpinner.style.display = 'block';
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/search?query=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    
+                    const suggestions = data.response?.suggestions || [];
+                    renderDropdown(suggestions);
+                } catch (error) {
+                    console.error("Erro ao buscar jogadores:", error);
+                } finally {
+                    searchSpinner.style.display = 'none';
+                }
+            }, 300);
+        });
+
+        // Oculta dropdown se clicar fora
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // 2. Renderiza Dropdown de Sugestões
+        function renderDropdown(suggestions) {
+            dropdown.innerHTML = '';
+            
+            if (suggestions.length === 0) {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            suggestions.slice(0, 8).forEach(player => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'suggestion-name';
+                nameSpan.textContent = player.name;
+
+                const clubSpan = document.createElement('span');
+                clubSpan.className = 'suggestion-club';
+                clubSpan.textContent = player.teamName || 'Sem Clube';
+
+                item.appendChild(nameSpan);
+                item.appendChild(clubSpan);
+
+                item.addEventListener('click', () => {
+                    selectPlayerFromSearch(player.name, player.id, player.teamId, player.teamName);
+                    dropdown.style.display = 'none';
+                    searchInput.value = player.name;
+                });
+
+                dropdown.appendChild(item);
+            });
+
+            dropdown.style.display = 'block';
+        }
+
+        // 3. Executa o Scout Automático ao selecionar jogador da lista
+        async function selectPlayerFromSearch(name, id, teamId, teamName) {
+            scoutCard.style.display = 'none';
+            searchSpinner.style.display = 'block';
+
+            try {
+                // Envia dados para o POST /api/scout
+                const response = await fetch(`${API_BASE_URL}/api/scout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nome_jogador: name,
+                        player_id: String(id),
+                        team_id: teamId ? String(teamId) : null,
+                        valor_mercado_manual: 0,
+                        gols_manual: 0,
+                        assists_manual: 0,
+                        url_fbref: ""
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === "success") {
+                    displayScoutResult(data, teamName);
+                } else if (data.status === "ambiguous") {
+                    // Se por algum motivo retornar ambíguo, pega a primeira sugestão automaticamente
+                    const firstOption = data.suggestions[0];
+                    selectPlayerFromSearch(firstOption.nome, firstOption.player_id, firstOption.team_id, firstOption.clube);
+                } else {
+                    alert("Falha ao obter dados deste atleta nas APIs.");
+                }
+            } catch (error) {
+                console.error("Erro no scout:", error);
+                alert("Erro ao tentar comunicar com o servidor.");
+            } finally {
+                searchSpinner.style.display = 'none';
+            }
+        }
+
+        // 4. Exibe os resultados no Card
+        function displayScoutResult(player, teamName) {
+            selectedPlayer = player;
+            cardName.textContent = player.nome;
+            cardTeam.textContent = teamName || "Sem Clube";
+            statGoals.textContent = player.gols;
+            statAssists.textContent = player.assists;
+            statValue.textContent = `€${player.valor_milhoes.toFixed(1)}M`;
+            
+            const score = player.pedirato;
+            pediratoScore.textContent = score.toFixed(2);
+
+            // Ajusta a cor do Índice PediRato dependendo do score
+            pediratoScore.className = 'pedirato-score';
+            if (score >= 1.5) {
+                pediratoScore.classList.add('pedirato-green');
+            } else if (score >= 0.5) {
+                pediratoScore.classList.add('pedirato-orange');
+            } else {
+                pediratoScore.classList.add('pedirato-red');
+            }
+
+            scoutCard.style.display = 'block';
+        }
+
+        // 5. Adiciona Jogador à Fila de Comparação
+        addToCompareBtn.addEventListener('click', () => {
+            if (!selectedPlayer) return;
+
+            // Verifica se o jogador já está na comparação
+            const exist = comparisonGroup.some(p => p.nome.toLowerCase() === selectedPlayer.nome.toLowerCase());
+            if (exist) {
+                alert("Este atleta já está na fila de comparação.");
+                return;
+            }
+
+            comparisonGroup.push(selectedPlayer);
+            updateCompareListUI();
+            
+            // Oculta o card de scout após adicionar para manter a interface limpa
+            scoutCard.style.display = 'none';
+            searchInput.value = '';
+            selectedPlayer = null;
+        });
+
+        // 6. Atualiza a Lista Visual de Comparação
+        function updateCompareListUI() {
+            compareList.innerHTML = '';
+            
+            if (comparisonGroup.length === 0) {
+                compareList.appendChild(emptyListMsg);
+                compareBtn.style.display = 'none';
+                return;
+            }
+
+            comparisonGroup.forEach((player, index) => {
+                const item = document.createElement('li');
+                item.className = 'compare-item';
+
+                const info = document.createElement('div');
+                info.className = 'compare-item-info';
+
+                const name = document.createElement('span');
+                name.className = 'compare-item-name';
+                name.textContent = player.nome.toUpperCase();
+
+                const details = document.createElement('span');
+                details.className = 'compare-item-pedirato';
+                details.textContent = `${player.gols} G | ${player.assists} A | €${player.valor_milhoes.toFixed(1)}M | PediRato: ${player.pedirato.toFixed(2)}`;
+
+                info.appendChild(name);
+                info.appendChild(details);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '&times;';
+                removeBtn.addEventListener('click', () => {
+                    comparisonGroup.splice(index, 1);
+                    updateCompareListUI();
+                });
+
+                item.appendChild(info);
+                item.appendChild(removeBtn);
+                compareList.appendChild(item);
+            });
+
+            compareBtn.style.display = 'block';
+        }
+
+        // 7. Envia a lista para comparação e gera o relatório gráfico
+        compareBtn.addEventListener('click', async () => {
+            if (comparisonGroup.length === 0) return;
+
+            compareBtn.style.display = 'none';
+            compareSpinner.style.display = 'block';
+            reportSection.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/compare`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jogadores: comparisonGroup })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    renderMarkdown(data.markdown);
+                    // Adiciona timestamp para forçar atualização do cache da imagem
+                    chartImg.src = `${API_BASE_URL}${data.grafico_url}?t=${new Date().getTime()}`;
+                    reportSection.style.display = 'block';
+                    
+                    // Rola a tela até o relatório
+                    reportSection.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert("Erro ao tentar comparar atletas.");
+                }
+            } catch (error) {
+                console.error("Erro na comparação:", error);
+                alert("Erro na comunicação com o servidor.");
+            } finally {
+                compareSpinner.style.display = 'none';
+                compareBtn.style.display = 'block';
+            }
+        });
+
+        // 8. Renderiza Markdown Básico em HTML Simples
+        function renderMarkdown(mdText) {
+            // Conversor de markdown ultra-simples para exibição
+            let html = mdText
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/gim, '<em>$1</em>');
+            
+            // Converter tabelas em HTML
+            if (html.includes('|')) {
+                const lines = html.split('\n');
+                let inTable = false;
+                let tableHtml = '<table>';
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (line.startsWith('|')) {
+                        if (!inTable) {
+                            inTable = true;
+                            tableHtml += '<thead>';
+                        }
+                        
+                        const cols = line.split('|').map(c => c.trim()).filter((c, index, arr) => index > 0 && index < arr.length - 1);
+                        
+                        // Ignorar linhas de separação | :--- | :---: |
+                        if (cols[0] && cols[0].includes('---')) {
+                            tableHtml += '</thead><tbody>';
+                            continue;
+                        }
+
+                        tableHtml += '<tr>';
+                        cols.forEach(col => {
+                            const tag = !inTable || tableHtml.includes('<tbody>') ? 'td' : 'th';
+                            tableHtml += `<${tag}>${col}</${tag}>`;
+                        });
+                        tableHtml += '</tr>';
+                    } else {
+                        if (inTable) {
+                            inTable = false;
+                            tableHtml += '</tbody></table>';
+                            lines[i] = tableHtml + '\n' + lines[i];
+                            tableHtml = '<table>';
+                        }
+                    }
+                }
+                html = lines.join('\n');
+            }
+
+            markdownContainer.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

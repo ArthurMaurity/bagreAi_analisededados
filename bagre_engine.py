@@ -59,9 +59,9 @@ class BagreBackend:
         Consulta o valor de mercado atualizado via API do Transfermarkt.
         Essencial para o cálculo do denominador no Índice PediRato.
         """
-        url = "https://transfermarket.p.rapidapi.com/players/search"
+        url = "https://transfermarkt.p.rapidapi.com/players/search"
         headers_tm = {
-            "x-rapidapi-host": "transfermarket.p.rapidapi.com",
+            "x-rapidapi-host": "transfermarkt.p.rapidapi.com",
             "x-rapidapi-key": self.headers["x-rapidapi-key"]
         }
         return self._executar_get(url, params={"query": nome_jogador}, headers=headers_tm)
@@ -77,8 +77,14 @@ class BagreBackend:
         """
         try:
             # O FBref bloqueia requisições sem User-Agent em alguns casos; 
-            # o pandas usa as configurações padrão do sistema.
-            tabelas = pd.read_html(url_atleta)
+            # usamos requests para enviar cabeçalhos apropriados.
+            from io import StringIO
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+            }
+            response = requests.get(url_atleta, headers=headers, timeout=15)
+            response.raise_for_status()
+            tabelas = pd.read_html(StringIO(response.text))
             # Retorna a primeira tabela (geralmente 'Standard Stats')
             return tabelas[0] if tabelas else pd.DataFrame()
         except Exception as e:
