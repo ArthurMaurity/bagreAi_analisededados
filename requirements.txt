@@ -4,6 +4,9 @@ requests
 matplotlib
 seaborn
 fastapi
-uvicorn
+uvicorn[standard]
+python-multipart
 python-docx
 scikit-learn
+slowapi
+python-dotenv

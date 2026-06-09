@@ -275,8 +275,8 @@ def analisar_hype_index(df: pd.DataFrame) -> pd.DataFrame:
 
     plt.style.use("dark_background")
     fig, ax = plt.subplots(figsize=(11, 7))
-    ax.set_facecolor(BG)
     fig.patch.set_facecolor(BG)
+    ax.set_facecolor(BG)
 
     # seaborn scatterplot com hue
     sns.scatterplot(
@@ -284,6 +284,9 @@ def analisar_hype_index(df: pd.DataFrame) -> pd.DataFrame:
         hue="classificacao", palette=cores_map,
         s=130, zorder=5, ax=ax, legend=False,
     )
+    # seaborn pode redefinir facecolors — reaplicar após o plot
+    ax.set_facecolor(BG)
+    fig.patch.set_facecolor(BG)
 
     # Reta de regressão via matplotlib
     x_line = np.linspace(df["performance"].min(), df["performance"].max(), 300)
@@ -308,7 +311,6 @@ def analisar_hype_index(df: pd.DataFrame) -> pd.DataFrame:
     plt.tight_layout()
     plt.savefig(img_path, dpi=150, facecolor=BG)
     plt.close()
-    plt.style.use("default")
     print(f"  Gráfico salvo: {img_path}\n")
 
     return df

@@ -5,12 +5,19 @@ Sem dependencias externas: usa apenas sqlite3 nativo do Python.
 import sys
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
+import os
 import sqlite3
 import uuid
 import json
 from datetime import datetime, date
 
-DB_PATH = "bagre.db"
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+DB_PATH = os.getenv("DATABASE_PATH", "bagre.db")
 
 LIMITES = {
     "varzea":  5,
@@ -226,7 +233,6 @@ class BagreDatabase:
 
 # ── INICIALIZAÇÃO STANDALONE ───────────────────────────────────────────────────
 if __name__ == "__main__":
-    import os
     db_file = DB_PATH
     primeira_vez = not os.path.exists(db_file)
 

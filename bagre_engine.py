@@ -1,19 +1,26 @@
+import os
 import requests
 import pandas as pd
 import json
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 class BagreBackend:
     """
     Motor Central de Dados - Bagre.ai
     Integra múltiplas fontes: RapidAPI (Live Data), Transfermarkt e FBref.
     """
-    
+
     def __init__(self):
-        # Configurações de autenticação e endpoints base
         self.base_url = "https://free-api-live-football-data.p.rapidapi.com"
+        api_key = os.getenv("RAPIDAPI_KEY", "")
         self.headers = {
             "x-rapidapi-host": "free-api-live-football-data.p.rapidapi.com",
-            "x-rapidapi-key": "4a59c92d94msh556847df4740a06p1ac94ajsn08537f3f721a"
+            "x-rapidapi-key": api_key,
         }
 
     def _executar_get(self, url, params=None, headers=None):
