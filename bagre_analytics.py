@@ -4,6 +4,7 @@ Implementa as Frentes 2, 3, 4 e 5 do CLAUDE.md.
 """
 import sys
 import os
+import datetime
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 import numpy as np
 import pandas as pd
@@ -427,6 +428,122 @@ def espelho_pedigree(jogador_ref: dict, pool: list) -> pd.DataFrame:
     print(f"  Gráfico Radar salvo: {img_path}\n")
 
     return df_out
+
+
+# ===============================================================================
+# GOLDEN LIST — Tier Diretor (exclusivo)
+# ===============================================================================
+_GOLDEN_POOL_PADRAO = [
+    {"nome": "Memphis Depay",     "gols": 8,  "assists": 4,  "valor_milhoes": 6.0},
+    {"nome": "Cyriel Dessers",    "gols": 14, "assists": 6,  "valor_milhoes": 12.0},
+    {"nome": "Tammy Abraham",     "gols": 9,  "assists": 4,  "valor_milhoes": 15.0},
+    {"nome": "Paulo Dybala",      "gols": 13, "assists": 5,  "valor_milhoes": 18.0},
+    {"nome": "João Pedro",        "gols": 11, "assists": 5,  "valor_milhoes": 22.0},
+    {"nome": "Antoine Griezmann", "gols": 18, "assists": 12, "valor_milhoes": 25.0},
+    {"nome": "Ademola Lookman",   "gols": 17, "assists": 9,  "valor_milhoes": 38.0},
+    {"nome": "Jonathan David",    "gols": 26, "assists": 5,  "valor_milhoes": 50.0},
+    {"nome": "Raphinha",          "gols": 27, "assists": 11, "valor_milhoes": 60.0},
+    {"nome": "Nico Williams",     "gols": 10, "assists": 9,  "valor_milhoes": 100.0},
+    {"nome": "Bukayo Saka",       "gols": 16, "assists": 8,  "valor_milhoes": 150.0},
+    {"nome": "Kylian Mbappé",     "gols": 25, "assists": 10, "valor_milhoes": 180.0},
+    {"nome": "Lamine Yamal",      "gols": 12, "assists": 14, "valor_milhoes": 180.0},
+    {"nome": "Erling Haaland",    "gols": 21, "assists": 5,  "valor_milhoes": 200.0},
+    {"nome": "Vinicius Jr.",      "gols": 22, "assists": 9,  "valor_milhoes": 200.0},
+]
+
+
+def golden_list(pool=None, top_n=10):
+    """
+    Ranking dos melhores Pedigrees de um pool.
+    Filtra jogadores com PediRato acima da média do pool,
+    ordena por PediRato descrescente e retorna os top_n.
+
+    Input:  lista de dicts [nome, gols, assists, valor_milhoes]  (None → dataset padrão)
+    Output: lista de dicts com posicao, nome, stats, pedirato, classificacao
+    """
+    if not pool:
+        pool = _GOLDEN_POOL_PADRAO
+
+    jogadores = [dict(j) for j in pool]
+    for j in jogadores:
+        v = max(j.get("valor_milhoes", 0.1), 0.1)
+        j["pedirato"] = (j.get("gols", 0) + j.get("assists", 0)) / v
+
+    media = sum(j["pedirato"] for j in jogadores) / len(jogadores)
+    pedigrees = sorted(
+        [j for j in jogadores if j["pedirato"] > media],
+        key=lambda j: j["pedirato"],
+        reverse=True,
+    )
+
+    return [
+        {
+            "posicao":       i + 1,
+            "nome":          j["nome"],
+            "gols":          j.get("gols", 0),
+            "assists":       j.get("assists", 0),
+            "valor_milhoes": j.get("valor_milhoes", 0.0),
+            "pedirato":      round(j["pedirato"], 2),
+            "classificacao": "PEDIGREE",
+        }
+        for i, j in enumerate(pedigrees[:top_n])
+    ]
+
+
+# ===============================================================================
+# PEDIRATO DA SEMANA — Tier Várzea (gratuito)
+# ===============================================================================
+_POOL_PADRAO = [
+    {"nome": "Memphis Depay",   "gols": 8,  "assists": 4,  "valor_milhoes": 6.0,
+     "clube": "Corinthians",    "liga": "Brasileirão"},
+    {"nome": "Paulo Dybala",    "gols": 13, "assists": 5,  "valor_milhoes": 18.0,
+     "clube": "AS Roma",        "liga": "Serie A"},
+    {"nome": "Ademola Lookman", "gols": 17, "assists": 9,  "valor_milhoes": 38.0,
+     "clube": "Atalanta",       "liga": "Serie A"},
+    {"nome": "Raphinha",        "gols": 27, "assists": 11, "valor_milhoes": 60.0,
+     "clube": "FC Barcelona",   "liga": "La Liga"},
+    {"nome": "Nico Williams",   "gols": 10, "assists": 9,  "valor_milhoes": 100.0,
+     "clube": "Athletic Club",  "liga": "La Liga"},
+    {"nome": "Bukayo Saka",     "gols": 16, "assists": 8,  "valor_milhoes": 150.0,
+     "clube": "Arsenal",        "liga": "Premier League"},
+    {"nome": "Lamine Yamal",    "gols": 12, "assists": 14, "valor_milhoes": 180.0,
+     "clube": "FC Barcelona",   "liga": "La Liga"},
+    {"nome": "Erling Haaland",  "gols": 21, "assists": 5,  "valor_milhoes": 200.0,
+     "clube": "Manchester City","liga": "Premier League"},
+]
+
+
+def pedirato_da_semana(pool=None):
+    """
+    Retorna o destaque semanal do tier Várzea.
+    Sem chamadas externas — 100% estático.
+    Rota pelo ranking PediRato usando o número ISO da semana como seed,
+    garantindo estabilidade dentro da semana e variação semanal automática.
+    """
+    jogadores = [dict(j) for j in (pool if pool is not None else _POOL_PADRAO)]
+
+    for j in jogadores:
+        g = j.get("gols", 0)
+        a = j.get("assists", 0)
+        v = max(j.get("valor_milhoes", 0.1), 0.1)
+        j["pedirato"] = (g + a) / v
+
+    pool_sorted = sorted(jogadores, key=lambda j: j["pedirato"], reverse=True)
+
+    semana = datetime.date.today().isocalendar()[1]
+    destaque = pool_sorted[semana % len(pool_sorted)]
+
+    return {
+        "nome":          destaque["nome"],
+        "clube":         destaque.get("clube", "—"),
+        "liga":          destaque.get("liga", "—"),
+        "gols":          destaque.get("gols", 0),
+        "assists":       destaque.get("assists", 0),
+        "valor_milhoes": destaque.get("valor_milhoes", 0.0),
+        "pedirato":      round(destaque["pedirato"], 2),
+        "destaque":      "PEDIGREE DA SEMANA",
+        "semana":        semana,
+    }
 
 
 # ── DEMONSTRAÇÃO ───────────────────────────────────────────────────────────────

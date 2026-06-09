@@ -9,6 +9,25 @@ try:
 except ImportError:
     pass
 
+def clean_currency(val):
+    """Converte strings de moeda do Transfermarkt para float em euros.
+    Ex: '€15m' -> 15000000.0 | '€500k' -> 500000.0 | '-' ou vazio -> 0.0"""
+    if not val or val == '-':
+        return 0.0
+    val_str = str(val).replace('€', '').strip()
+    multiplier = 1.0
+    if 'm' in val_str.lower():
+        multiplier = 1_000_000.0
+        val_str = val_str.lower().replace('m', '')
+    elif 'k' in val_str.lower():
+        multiplier = 1_000.0
+        val_str = val_str.lower().replace('k', '')
+    try:
+        return float(val_str) * multiplier
+    except ValueError:
+        return 0.0
+
+
 class BagreBackend:
     """
     Motor Central de Dados - Bagre.ai
@@ -108,10 +127,27 @@ class BagreBackend:
 
 # --- BLOCO DE VALIDAÇÃO DO SISTEMA ---
 if __name__ == "__main__":
+    # Testes de clean_currency
+    casos = [
+        ('€15m',   15_000_000.0),
+        ('€500k',  500_000.0),
+        ('€1.2m',  1_200_000.0),
+        ('-',      0.0),
+        ('',       0.0),
+    ]
+    print("=== Testes clean_currency ===")
+    todos_ok = True
+    for entrada, esperado in casos:
+        resultado = clean_currency(entrada)
+        status = "OK" if resultado == esperado else "FAIL"
+        if status == "FAIL":
+            todos_ok = False
+        print(f"  [{status}] clean_currency({entrada!r}) = {resultado} (esperado: {esperado})")
+    print("Todos os testes passaram!" if todos_ok else "ATENÇÃO: há falhas nos testes.")
+    print()
+
     motor = BagreBackend()
     print("Iniciando validação do motor multicloud...")
-    
-    # Teste simples de conectividade
     teste = motor.buscar_jogador("Arrascaeta")
     if teste and teste.get("status") == "success":
         print("Backend Bagre.ai operacional: Pronto para integração múltipla.")

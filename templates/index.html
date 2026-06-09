@@ -265,6 +265,53 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
 .kval { font-size: 1.5rem; font-weight: 700; color: var(--green); }
 .klbl { font-size: .62rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
 
+/* ── PEDIRATO DA SEMANA ──────────────────────────────────────── */
+#pedirato-semana-card {
+  position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #071407 0%, #0d2a0d 60%, #060f06 100%);
+  border: 1px solid var(--green); border-radius: var(--radius);
+  padding: 22px 26px; margin-bottom: var(--sp-lg);
+  box-shadow: 0 0 14px rgba(57,255,20,.18), 0 0 40px rgba(57,255,20,.06);
+  transition: box-shadow .25s;
+}
+#pedirato-semana-card:hover { box-shadow: 0 0 20px rgba(57,255,20,.32), 0 0 50px rgba(57,255,20,.1); }
+#pedirato-semana-card::before {
+  content: ''; position: absolute; top: -30px; right: -30px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(57,255,20,.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+.psemana-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.psemana-label {
+  font-size: .62rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+  color: #000; background: var(--green); padding: 3px 11px; border-radius: 3px;
+}
+.psemana-week { font-size: .65rem; color: var(--muted); letter-spacing: 1px; }
+.psemana-nome {
+  font-size: 1.65rem; font-weight: 700; letter-spacing: 2px;
+  color: var(--white); text-shadow: 0 0 10px rgba(57,255,20,.35); margin-bottom: 3px;
+}
+.psemana-sub { font-size: .78rem; color: var(--muted); letter-spacing: 1px; margin-bottom: 18px; }
+.psemana-body { display: flex; align-items: flex-end; gap: 22px; flex-wrap: wrap; }
+.psemana-stats { display: flex; gap: 22px; flex-wrap: wrap; flex: 1; }
+.psemana-stat .val {
+  font-size: 1.5rem; font-weight: 700; color: var(--green);
+  text-shadow: 0 0 6px rgba(57,255,20,.45); display: block; line-height: 1.15;
+}
+.psemana-stat .lbl {
+  font-size: .6rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase;
+}
+.psemana-score { text-align: right; }
+.psemana-score .big {
+  font-size: 3rem; font-weight: 700; line-height: 1;
+  color: var(--green); text-shadow: var(--glow);
+}
+.psemana-score .lbl { font-size: .58rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+.psemana-footer {
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid #1a2a1a;
+  font-size: .68rem; color: #3a6a3a; letter-spacing: 1px;
+}
+
 /* ── DASHBOARD ───────────────────────────────────────────────── */
 .dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
              gap: var(--sp-lg); margin-top: var(--sp-md); }
@@ -278,6 +325,21 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
 .dash-lock { font-size: .72rem; color: var(--muted); letter-spacing: 1px; white-space: nowrap; }
 .dash-card.locked { opacity: .55; }
 .dash-card.locked .dash-t { color: var(--muted); }
+
+/* ── GOLDEN LIST ─────────────────────────────────────────────── */
+.gl-banner {
+  background: linear-gradient(135deg, #1a1000 0%, #2a1a00 60%, #120d00 100%);
+  border: 1px solid #fa0; border-radius: var(--radius);
+  padding: 14px 20px; margin-bottom: var(--sp-lg);
+  box-shadow: 0 0 12px rgba(255,170,0,.12);
+  font-size: .82rem; color: #fa0; letter-spacing: 1px;
+}
+.gl-banner strong { color: #ffc733; }
+.gl-medal { font-size: 1.1rem; }
+.gl-pos   { font-size: .85rem; font-weight: 700; color: var(--muted); }
+.gl-score { font-size: 1.1rem; font-weight: 700; color: var(--green);
+            text-shadow: 0 0 6px rgba(57,255,20,.4); }
+table.dt td.gl-nome { font-weight: 700; letter-spacing: .5px; }
 
 /* ── SESSION BAR ─────────────────────────────────────────────── */
 #session-bar {
@@ -436,6 +498,10 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
           📄 Relatório DOCX<span class="lbadge">🔒 diretor</span>
           <span class="ttip">Requer plano Diretor</span>
         </li>
+        <li data-sec="s-golden" data-req="golden_list" onclick="nav(this)">
+          🏆 Golden List<span class="lbadge">🔒 diretor</span>
+          <span class="ttip">Requer plano Diretor</span>
+        </li>
       </ul>
     </nav>
 
@@ -445,6 +511,20 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
       <div id="s-dash" class="section">
         <div class="stitle">📊 Dashboard</div>
         <div class="sdesc">Visão geral da sua sessão e atalhos para as análises.</div>
+
+        <!-- PEDIRATO DA SEMANA -->
+        <div id="pedirato-semana-card">
+          <div id="pedirato-semana-inner">
+            <div class="sk-card">
+              <div class="sk-line w40" style="height:14px"></div>
+              <div class="sk-line w60" style="height:26px;margin-top:8px"></div>
+              <div class="sk-grid">
+                <div class="sk-box"></div><div class="sk-box"></div>
+                <div class="sk-box"></div><div class="sk-box" style="max-width:80px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- KPIs -->
         <div class="krow">
@@ -627,6 +707,37 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
           <button class="btn-p bagre-btn" id="docx-btn" onclick="doDocx()">GERAR RELATÓRIO .DOCX</button>
           <div id="docx-out"></div>
         </div>
+      </div>
+
+      <!-- GOLDEN LIST -->
+      <div id="s-golden" class="section">
+        <div class="stitle">🏆 Golden List</div>
+        <div class="sdesc">Ranking dos melhores Pedigrees — oportunidades subvalorizadas do mercado. Exclusivo Diretor.</div>
+
+        <div class="gl-banner">
+          <strong>Como funciona:</strong> informe seu pool de jogadores e o sistema filtra apenas
+          aqueles com PediRato acima da média, retornando o ranking de eficiência de capital.
+          Deixe a tabela vazia para usar o <strong>dataset curado Bagre.ai</strong>.
+        </div>
+
+        <div class="card bagre-card">
+          <div class="ctitle">Pool de Jogadores (opcional — vazio = dataset padrão)</div>
+          <table class="dt" id="golden-tbl">
+            <thead><tr><th>Nome</th><th>Valor €M</th><th>Gols</th><th>Assists</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <button class="btn-add" onclick="addRow('golden-tbl',['nome','valor_milhoes','gols','assists'])">+ Adicionar jogador</button>
+          <br>
+          <div class="frow" style="align-items:flex-end;margin-top:10px">
+            <div class="fg" style="max-width:140px">
+              <label>Top N resultados</label>
+              <input id="golden-topn" class="bagre-input" type="number" min="1" max="50" value="10">
+            </div>
+            <button class="btn-p bagre-btn" onclick="doGoldenList()">GERAR GOLDEN LIST</button>
+            <button class="btn-s" onclick="clearGoldenTbl()" style="margin-left:4px">USAR DATASET PADRÃO</button>
+          </div>
+        </div>
+        <div id="golden-out"></div>
       </div>
 
     </div><!-- /main -->
@@ -939,6 +1050,47 @@ function nav(li){
   }
 }
 
+/* PEDIRATO DA SEMANA */
+async function loadPediratoDaSemana(){
+  if(window._pediratoDaSemanaLoaded) return;
+  const el=$('pedirato-semana-inner');
+  if(!el) return;
+  try {
+    const d=await api('GET','/v1/pedirato-da-semana');
+    const pr=typeof d.pedirato==='number'?d.pedirato.toFixed(2):d.pedirato;
+    el.innerHTML=`
+      <div class="psemana-header">
+        <span class="psemana-label">⭐ PEDIGREE DA SEMANA</span>
+        <span class="psemana-week">Semana ${d.semana}</span>
+      </div>
+      <div class="psemana-nome">${esc(d.nome)}</div>
+      <div class="psemana-sub">${esc(d.clube)} · ${esc(d.liga)}</div>
+      <div class="psemana-body">
+        <div class="psemana-stats">
+          <div class="psemana-stat">
+            <span class="val">${d.gols}</span><span class="lbl">Gols</span>
+          </div>
+          <div class="psemana-stat">
+            <span class="val">${d.assists}</span><span class="lbl">Assists</span>
+          </div>
+          <div class="psemana-stat">
+            <span class="val">€${d.valor_milhoes}M</span><span class="lbl">Valor Mercado</span>
+          </div>
+        </div>
+        <div class="psemana-score">
+          <div class="big">${pr}</div>
+          <div class="lbl">PediRato Score</div>
+        </div>
+      </div>
+      <div class="psemana-footer">
+        Destaque automático · muda toda semana · disponível para todos os planos
+      </div>`;
+    window._pediratoDaSemanaLoaded=true;
+  } catch(_){
+    el.innerHTML=`<div style="color:var(--muted);font-size:.82rem;padding:8px 0">Destaque semanal indisponível no momento.</div>`;
+  }
+}
+
 /* DASHBOARD */
 function goSection(secId){
   // Reutiliza a navegação do sidebar (inclui o modal de plano se a seção estiver bloqueada).
@@ -947,6 +1099,7 @@ function goSection(secId){
 }
 
 function refreshDash(){
+  loadPediratoDaSemana();
   const me = window.ME || {};
   const s  = window.sessao || [];
 
@@ -1239,6 +1392,81 @@ async function doGini(){
     buildGiniChart('chart-gini', d);
   } catch(e){
     if(e.status===403) err(out,'🔒 Acesso negado. Requer plano DIRETOR.');
+    else err(out,e.detail||`Erro ${e.status}`);
+  }
+}
+
+/* ── GOLDEN LIST ────────────────────────────────────────────── */
+function clearGoldenTbl(){
+  document.querySelector('#golden-tbl tbody').innerHTML='';
+  doGoldenList();
+}
+
+async function doGoldenList(){
+  const out=$('golden-out');
+  const rows=readTbl('golden-tbl',['nome','valor_milhoes','gols','assists']);
+  if(rows.some(j=>[j.valor_milhoes,j.gols,j.assists].some(v=>v!==null&&v<0)))
+    return err(out,'Valores não podem ser negativos.');
+  const topn=parseInt($('golden-topn').value)||10;
+  if(topn<1||topn>50) return err(out,'Top N deve estar entre 1 e 50.');
+  spin(out);
+  const body = rows.length ? {jogadores: rows, top_n: topn} : {top_n: topn};
+  try {
+    const d=await api('POST','/v1/golden-list', body);
+    toast('ok','Golden List gerada — '+d.total_pedigrees+' Pedigrees');
+    const MEDALS=['🥇','🥈','🥉'];
+    const fonte = d.fonte==='dataset_padrao'
+      ? '<span style="color:var(--muted);font-size:.72rem">Dataset curado Bagre.ai</span>'
+      : '<span style="color:var(--muted);font-size:.72rem">Pool personalizado</span>';
+    const rows_html=(d.golden_list||[]).map(j=>{
+      const medal = j.posicao<=3 ? `<span class="gl-medal">${MEDALS[j.posicao-1]}</span>`
+                                 : `<span class="gl-pos">${j.posicao}º</span>`;
+      const barPct=Math.min(100,(j.pedirato/((d.golden_list[0]||{}).pedirato||1))*100).toFixed(0);
+      return `<tr>
+        <td style="text-align:center;width:44px">${medal}</td>
+        <td class="gl-nome">${esc(j.nome)}</td>
+        <td>${j.gols}</td>
+        <td>${j.assists}</td>
+        <td>€${j.valor_milhoes}M</td>
+        <td>
+          <span class="gl-score">${j.pedirato.toFixed(2)}</span>
+          <div style="margin-top:3px;height:3px;background:#1a2a1a;border-radius:2px;width:80px">
+            <div style="height:100%;width:${barPct}%;background:var(--green);border-radius:2px;
+                        box-shadow:0 0 4px rgba(57,255,20,.5)"></div>
+          </div>
+        </td>
+        <td><span class="badge b-ped">PEDIGREE</span></td>
+      </tr>`;
+    }).join('');
+    out.innerHTML=`<div class="card" style="margin-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="ctitle" style="margin-bottom:0">🏆 Golden List — Top ${d.top_n}</div>
+        ${fonte}
+      </div>
+      <div class="krow" style="margin-bottom:14px">
+        <div class="kbox">
+          <div class="kval" style="color:#fa0">${d.total_pedigrees}</div>
+          <div class="klbl">Pedigrees Encontrados</div>
+        </div>
+        <div class="kbox">
+          <div class="kval">${((d.golden_list||[])[0]||{}).nome||'—'}</div>
+          <div class="klbl">Lider da Golden List</div>
+        </div>
+        <div class="kbox">
+          <div class="kval">${((d.golden_list||[])[0]||{}).pedirato?.toFixed(2)||'—'}</div>
+          <div class="klbl">Maior PediRato</div>
+        </div>
+      </div>
+      <div class="twrap"><table class="dt">
+        <thead><tr>
+          <th>#</th><th>Jogador</th><th>Gols</th><th>Assists</th>
+          <th>Valor</th><th>PediRato Score</th><th>Class.</th>
+        </tr></thead>
+        <tbody>${rows_html}</tbody>
+      </table></div>
+    </div>`;
+  } catch(e){
+    if(e.status===403) err(out,'🔒 Acesso negado. A Golden List é exclusiva do plano DIRETOR.');
     else err(out,e.detail||`Erro ${e.status}`);
   }
 }

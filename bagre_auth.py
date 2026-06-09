@@ -14,6 +14,7 @@ FUNCIONALIDADES: dict[str, list[str]] = {
     "gini":              ["diretor"],
     "ciclo_vida":        ["diretor"],
     "relatorio_docx":    ["diretor"],
+    "golden_list":       ["diretor"],
 }
 
 DESCRICAO_PLANO = {

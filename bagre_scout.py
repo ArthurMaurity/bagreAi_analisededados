@@ -1,4 +1,4 @@
-from bagre_engine import BagreBackend
+from bagre_engine import BagreBackend, clean_currency
 import pandas as pd
 import unicodedata
 
@@ -127,7 +127,7 @@ def realizar_scout_processado(nome_jogador, player_id=None, team_id=None, valor_
         if dados_tm and dados_tm.get('response', {}).get('players'):
             try:
                 val_str = dados_tm['response']['players'][0].get('marketValue', '1m')
-                valor_eur = int(''.join(filter(str.isdigit, val_str.replace('m', '000000'))))
+                valor_eur = clean_currency(val_str)
                 valor_milhoes = max(valor_eur / 1_000_000, 0.1)
                 print(f"[✓] Valor encontrado via API: €{valor_milhoes:.2f}M")
             except Exception as e:

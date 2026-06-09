@@ -32,6 +32,8 @@ from bagre_analytics import (
     analisar_ciclo_de_vida,
     analisar_concentracao_liga,
     espelho_pedigree,
+    pedirato_da_semana,
+    golden_list,
 )
 
 # ── SETUP ──────────────────────────────────────────────────────────────────────
@@ -140,6 +142,19 @@ class GiniRequest(BaseModel):
 class CicloVidaRequest(BaseModel):
     jogadores: List[JogadorVida]
 
+class GoldenListRequest(BaseModel):
+    jogadores: Optional[List[JogadorHype]] = None
+    top_n: int = 10
+
+    model_config = {"json_schema_extra": {"example": {
+        "top_n": 10,
+        "jogadores": [
+            {"nome": "Cyriel Dessers",  "valor_milhoes": 12, "gols": 14, "assists": 6},
+            {"nome": "Paulo Dybala",    "valor_milhoes": 18, "gols": 13, "assists": 5},
+            {"nome": "Erling Haaland",  "valor_milhoes": 200,"gols": 21, "assists": 5},
+        ]
+    }}}
+
 class DocxReportRequest(BaseModel):
     jogadores: List[dict]
 
@@ -198,6 +213,18 @@ def get_me(usuario: dict = Depends(get_current_user)):
             for h in historico
         ],
     }
+
+
+# ── TIER VÁRZEA — PEDIRATO DA SEMANA ──────────────────────────────────────────
+@app.get("/v1/pedirato-da-semana", tags=["Várzea (free)"])
+def get_pedirato_da_semana(usuario: dict = Depends(get_current_user)):
+    """
+    **Tier mínimo: várzea.**
+    Destaque semanal gratuito: o melhor Pedigree do pool curado.
+    Não consome API externa nem desconta do limite diário de scouts.
+    Muda automaticamente a cada semana (seed = número ISO da semana).
+    """
+    return pedirato_da_semana()
 
 
 # ── TIER VÁRZEA — SCOUT ────────────────────────────────────────────────────────
@@ -319,6 +346,44 @@ def espelho_pedigree_endpoint(
     }
     db.salvar_analise(usuario["id"], "espelho_pedigree",
                       {"referencial": ref["nome"]}, output)
+    return output
+
+
+# ── TIER DIRETOR — GOLDEN LIST ────────────────────────────────────────────────
+@app.post("/v1/golden-list", tags=["Diretor"])
+@limiter.limit("5/minute")
+def golden_list_endpoint(
+    request: Request,
+    req: GoldenListRequest,
+    usuario: dict = Depends(get_current_user),
+):
+    """
+    **Tier mínimo: diretor.**
+    Ranking dos melhores Pedigrees do pool informado (ou dataset curado padrão).
+    Filtra jogadores com PediRato acima da média do pool e retorna os top_n
+    ordenados por eficiência (Gols + Assists / Valor de Mercado).
+    """
+    _verificar_tier(usuario, "golden_list")
+
+    pool = [j.model_dump() for j in req.jogadores] if req.jogadores else None
+
+    if pool is not None and len(pool) < 2:
+        raise HTTPException(status_code=422, detail="Mínimo de 2 jogadores para gerar a Golden List.")
+
+    top_n = max(1, min(req.top_n, 50))
+    resultado = golden_list(pool=pool, top_n=top_n)
+
+    if not resultado:
+        raise HTTPException(status_code=404, detail="Nenhum Pedigree encontrado acima da média do pool informado.")
+
+    output = {
+        "total_pedigrees": len(resultado),
+        "top_n":           top_n,
+        "fonte":           "pool_personalizado" if pool else "dataset_padrao",
+        "golden_list":     resultado,
+    }
+    db.salvar_analise(usuario["id"], "golden_list",
+                      {"n_jogadores": len(pool) if pool else 15, "top_n": top_n}, output)
     return output
 
 
