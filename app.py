@@ -155,6 +155,11 @@ class GoldenListRequest(BaseModel):
         ]
     }}}
 
+class ScoutRequest(BaseModel):
+    nome_jogador: str
+    player_id: Optional[int] = None
+    team_id: Optional[int] = None
+
 class DocxReportRequest(BaseModel):
     jogadores: List[dict]
 
@@ -233,34 +238,24 @@ def get_pedirato_da_semana(usuario: dict = Depends(get_current_user)):
 def scout(
     request: Request,
     nome: str = Query(..., description="Nome do jogador"),
-    valor_mercado: Optional[float] = Query(None, description="Valor manual em €M"),
-    gols: Optional[int]   = Query(None),
-    assists: Optional[int] = Query(None),
     usuario: dict = Depends(get_current_user),
 ):
     """
     **Tier mínimo: várzea.**
-    Busca e calcula o Índice PediRato de um jogador.
-    Usa cache de 24h para economizar chamadas externas.
+    Busca e calcula o Índice PediRato via waterfall de fontes (API → Transfermarkt → FBref → cache).
+    Cache de 24h para economizar chamadas externas.
     """
     _verificar_tier(usuario, "scout")
 
-    nome_norm = normalizar_texto(nome)
+    nome = nome.strip()
+    if not nome:
+        raise HTTPException(status_code=400, detail="Nome do jogador não pode estar em branco.")
+    if len(nome) < 3:
+        raise HTTPException(status_code=400, detail="Nome muito curto. Digite ao menos 3 caracteres.")
+    if len(nome) > 100:
+        raise HTTPException(status_code=400, detail="Nome muito longo. Máximo de 100 caracteres.")
 
-    # Verificar cache
-    cached = db.buscar_cache(nome_norm)
-    if cached:
-        db.salvar_analise(usuario["id"], "scout",
-                          {"nome": nome, "fonte": "cache"}, cached)
-        return {**cached, "fonte": "cache"}
-
-    # Buscar via APIs externas
-    resultado = realizar_scout_processado(
-        nome_jogador=nome,
-        valor_mercado_manual=valor_mercado,
-        gols_manual=gols,
-        assists_manual=assists,
-    )
+    resultado = realizar_scout_processado(nome_jogador=nome)
 
     if resultado.get("status") == "ambiguous":
         raise HTTPException(
@@ -271,12 +266,11 @@ def scout(
             },
         )
 
-    if resultado.get("status") != "success":
-        raise HTTPException(status_code=404, detail="Jogador não encontrado.")
+    if resultado.get("status") == "unavailable":
+        return resultado
 
-    db.salvar_cache(nome_norm, resultado)
     db.salvar_analise(usuario["id"], "scout", {"nome": nome}, resultado)
-    return {**resultado, "fonte": "api"}
+    return resultado
 
 
 # ── TIER OLHEIRO — HYPE INDEX ──────────────────────────────────────────────────
@@ -402,6 +396,8 @@ def gini(request: Request, req: GiniRequest, usuario: dict = Depends(get_current
 
     df      = pd.DataFrame([c.model_dump() for c in req.clubes])
     res     = analisar_concentracao_liga(df)
+    if "error" in res:
+        raise HTTPException(status_code=422, detail=res["error"])
     grafico = _copiar_grafico("gini_liga.png", "gini")
 
     output = {
@@ -435,6 +431,8 @@ def ciclo_vida(request: Request, req: CicloVidaRequest, usuario: dict = Depends(
 
     df  = pd.DataFrame([j.model_dump() for j in req.jogadores])
     res = analisar_ciclo_de_vida(df)
+    if "error" in res:
+        raise HTTPException(status_code=422, detail=res["error"])
     grafico = _copiar_grafico("ciclo_vida.png", "ciclo")
 
     output = {
@@ -496,16 +494,12 @@ def search_legacy(query: str):
 
 
 @app.post("/api/scout", include_in_schema=False)
-def scout_legacy(req: dict):
+def scout_legacy(req: ScoutRequest):
     try:
         return realizar_scout_processado(
-            nome_jogador=req.get("nome_jogador", ""),
-            player_id=req.get("player_id"),
-            team_id=req.get("team_id"),
-            valor_mercado_manual=req.get("valor_mercado_manual"),
-            gols_manual=req.get("gols_manual"),
-            assists_manual=req.get("assists_manual"),
-            url_fbref=req.get("url_fbref"),
+            nome_jogador=req.nome_jogador,
+            player_id=req.player_id,
+            team_id=req.team_id,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

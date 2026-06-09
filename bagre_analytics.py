@@ -54,6 +54,8 @@ def analisar_ciclo_de_vida(df: pd.DataFrame) -> dict:
         raise ValueError(f"DataFrame deve ter as colunas: {required}")
     if len(df) < 3:
         raise ValueError("Mínimo de 3 jogadores para análise de ciclo de vida.")
+    if df["idade"].nunique() < 2:
+        return {"error": "Idades insuficientes para regressão. Use jogadores com idades diferentes."}
 
     df = df.copy().reset_index(drop=True)
     x = df["idade"].values.astype(float)
@@ -145,6 +147,8 @@ def analisar_concentracao_liga(df: pd.DataFrame) -> dict:
         raise ValueError(f"DataFrame deve ter as colunas: {required}")
     if len(df) < 2:
         raise ValueError("Mínimo de 2 clubes para análise.")
+    if df["valor_total_elenco_milhoes"].sum() == 0:
+        return {"error": "Todos os valores são zero. Insira valores válidos."}
 
     df = df.copy().sort_values("valor_total_elenco_milhoes").reset_index(drop=True)
     x  = df["valor_total_elenco_milhoes"].values.astype(float)
@@ -434,21 +438,38 @@ def espelho_pedigree(jogador_ref: dict, pool: list) -> pd.DataFrame:
 # GOLDEN LIST — Tier Diretor (exclusivo)
 # ===============================================================================
 _GOLDEN_POOL_PADRAO = [
-    {"nome": "Memphis Depay",     "gols": 8,  "assists": 4,  "valor_milhoes": 6.0},
-    {"nome": "Cyriel Dessers",    "gols": 14, "assists": 6,  "valor_milhoes": 12.0},
-    {"nome": "Tammy Abraham",     "gols": 9,  "assists": 4,  "valor_milhoes": 15.0},
-    {"nome": "Paulo Dybala",      "gols": 13, "assists": 5,  "valor_milhoes": 18.0},
-    {"nome": "João Pedro",        "gols": 11, "assists": 5,  "valor_milhoes": 22.0},
-    {"nome": "Antoine Griezmann", "gols": 18, "assists": 12, "valor_milhoes": 25.0},
-    {"nome": "Ademola Lookman",   "gols": 17, "assists": 9,  "valor_milhoes": 38.0},
-    {"nome": "Jonathan David",    "gols": 26, "assists": 5,  "valor_milhoes": 50.0},
-    {"nome": "Raphinha",          "gols": 27, "assists": 11, "valor_milhoes": 60.0},
-    {"nome": "Nico Williams",     "gols": 10, "assists": 9,  "valor_milhoes": 100.0},
-    {"nome": "Bukayo Saka",       "gols": 16, "assists": 8,  "valor_milhoes": 150.0},
-    {"nome": "Kylian Mbappé",     "gols": 25, "assists": 10, "valor_milhoes": 180.0},
-    {"nome": "Lamine Yamal",      "gols": 12, "assists": 14, "valor_milhoes": 180.0},
-    {"nome": "Erling Haaland",    "gols": 21, "assists": 5,  "valor_milhoes": 200.0},
-    {"nome": "Vinicius Jr.",      "gols": 22, "assists": 9,  "valor_milhoes": 200.0},
+    # ── Brasileiros ──────────────────────────────────────────────────────────
+    {"nome": "Giorgian De Arrascaeta", "gols": 25, "assists": 19, "valor_milhoes": 14.0},
+    {"nome": "Kaio Jorge",             "gols": 21, "assists": 8,  "valor_milhoes": 12.0},
+    {"nome": "Yuri Alberto",           "gols": 19, "assists": 6,  "valor_milhoes": 15.0},
+    {"nome": "Pedro Guilherme",        "gols": 15, "assists": 4,  "valor_milhoes": 20.0},
+    {"nome": "Vitor Roque",            "gols": 14, "assists": 5,  "valor_milhoes": 25.0},
+    {"nome": "Neymar Jr",              "gols": 8,  "assists": 6,  "valor_milhoes": 15.0},
+    {"nome": "Raphinha",               "gols": 22, "assists": 16, "valor_milhoes": 70.0},
+    {"nome": "Gabriel Martinelli",     "gols": 15, "assists": 8,  "valor_milhoes": 75.0},
+    {"nome": "Matheus Cunha",          "gols": 12, "assists": 7,  "valor_milhoes": 40.0},
+    {"nome": "Savinho",                "gols": 9,  "assists": 11, "valor_milhoes": 45.0},
+    {"nome": "Estevao Willian",        "gols": 12, "assists": 10, "valor_milhoes": 60.0},
+    {"nome": "Endrick Felipe",         "gols": 8,  "assists": 3,  "valor_milhoes": 35.0},
+    {"nome": "Igor Jesus",             "gols": 11, "assists": 5,  "valor_milhoes": 18.0},
+    {"nome": "Igor Thiago",            "gols": 11, "assists": 4,  "valor_milhoes": 22.0},
+    {"nome": "Andreas Pereira",        "gols": 6,  "assists": 9,  "valor_milhoes": 15.0},
+    {"nome": "Vinicius Junior",        "gols": 9,  "assists": 7,  "valor_milhoes": 180.0},
+    {"nome": "Richarlison",            "gols": 5,  "assists": 2,  "valor_milhoes": 45.0},
+    {"nome": "Antony Matheus",         "gols": 4,  "assists": 3,  "valor_milhoes": 30.0},
+    {"nome": "Gabriel Jesus",          "gols": 5,  "assists": 3,  "valor_milhoes": 40.0},
+    {"nome": "Casemiro",               "gols": 2,  "assists": 2,  "valor_milhoes": 20.0},
+    {"nome": "Joao Gomes",             "gols": 1,  "assists": 3,  "valor_milhoes": 28.0},
+    # ── Europeus ─────────────────────────────────────────────────────────────
+    {"nome": "Lamine Yamal",           "gols": 18, "assists": 16, "valor_milhoes": 180.0},
+    {"nome": "Antoine Griezmann",      "gols": 16, "assists": 11, "valor_milhoes": 20.0},
+    {"nome": "Bruno Fernandes",        "gols": 15, "assists": 17, "valor_milhoes": 65.0},
+    {"nome": "Erling Haaland",         "gols": 27, "assists": 6,  "valor_milhoes": 200.0},
+    {"nome": "Lautaro Martinez",       "gols": 20, "assists": 8,  "valor_milhoes": 110.0},
+    {"nome": "Pedri Gonzalez",         "gols": 9,  "assists": 13, "valor_milhoes": 90.0},
+    {"nome": "Kylian Mbappe",          "gols": 18, "assists": 7,  "valor_milhoes": 250.0},
+    {"nome": "Jack Grealish",          "gols": 4,  "assists": 5,  "valor_milhoes": 75.0},
+    {"nome": "Riyad Mahrez",           "gols": 5,  "assists": 4,  "valor_milhoes": 12.0},
 ]
 
 
@@ -494,22 +515,68 @@ def golden_list(pool=None, top_n=10):
 # PEDIRATO DA SEMANA — Tier Várzea (gratuito)
 # ===============================================================================
 _POOL_PADRAO = [
-    {"nome": "Memphis Depay",   "gols": 8,  "assists": 4,  "valor_milhoes": 6.0,
-     "clube": "Corinthians",    "liga": "Brasileirão"},
-    {"nome": "Paulo Dybala",    "gols": 13, "assists": 5,  "valor_milhoes": 18.0,
-     "clube": "AS Roma",        "liga": "Serie A"},
-    {"nome": "Ademola Lookman", "gols": 17, "assists": 9,  "valor_milhoes": 38.0,
-     "clube": "Atalanta",       "liga": "Serie A"},
-    {"nome": "Raphinha",        "gols": 27, "assists": 11, "valor_milhoes": 60.0,
-     "clube": "FC Barcelona",   "liga": "La Liga"},
-    {"nome": "Nico Williams",   "gols": 10, "assists": 9,  "valor_milhoes": 100.0,
-     "clube": "Athletic Club",  "liga": "La Liga"},
-    {"nome": "Bukayo Saka",     "gols": 16, "assists": 8,  "valor_milhoes": 150.0,
-     "clube": "Arsenal",        "liga": "Premier League"},
-    {"nome": "Lamine Yamal",    "gols": 12, "assists": 14, "valor_milhoes": 180.0,
-     "clube": "FC Barcelona",   "liga": "La Liga"},
-    {"nome": "Erling Haaland",  "gols": 21, "assists": 5,  "valor_milhoes": 200.0,
-     "clube": "Manchester City","liga": "Premier League"},
+    # ── Brasileiros ──────────────────────────────────────────────────────────
+    {"nome": "Giorgian De Arrascaeta", "gols": 25, "assists": 19, "valor_milhoes": 14.0,
+     "clube": "Flamengo",          "liga": "Brasileirao"},
+    {"nome": "Kaio Jorge",             "gols": 21, "assists": 8,  "valor_milhoes": 12.0,
+     "clube": "Cruzeiro",           "liga": "Brasileirao"},
+    {"nome": "Yuri Alberto",           "gols": 19, "assists": 6,  "valor_milhoes": 15.0,
+     "clube": "Corinthians",        "liga": "Brasileirao"},
+    {"nome": "Pedro Guilherme",        "gols": 15, "assists": 4,  "valor_milhoes": 20.0,
+     "clube": "Flamengo",           "liga": "Brasileirao"},
+    {"nome": "Vitor Roque",            "gols": 14, "assists": 5,  "valor_milhoes": 25.0,
+     "clube": "Palmeiras",          "liga": "Brasileirao"},
+    {"nome": "Neymar Jr",              "gols": 8,  "assists": 6,  "valor_milhoes": 15.0,
+     "clube": "Santos",             "liga": "Brasileirao"},
+    {"nome": "Raphinha",               "gols": 22, "assists": 16, "valor_milhoes": 70.0,
+     "clube": "Barcelona",          "liga": "LaLiga"},
+    {"nome": "Gabriel Martinelli",     "gols": 15, "assists": 8,  "valor_milhoes": 75.0,
+     "clube": "Arsenal",            "liga": "Premier League"},
+    {"nome": "Matheus Cunha",          "gols": 12, "assists": 7,  "valor_milhoes": 40.0,
+     "clube": "Manchester United",  "liga": "Premier League"},
+    {"nome": "Savinho",                "gols": 9,  "assists": 11, "valor_milhoes": 45.0,
+     "clube": "Manchester City",    "liga": "Premier League"},
+    {"nome": "Estevao Willian",        "gols": 12, "assists": 10, "valor_milhoes": 60.0,
+     "clube": "Chelsea",            "liga": "Premier League"},
+    {"nome": "Endrick Felipe",         "gols": 8,  "assists": 3,  "valor_milhoes": 35.0,
+     "clube": "Lyon",               "liga": "Ligue 1"},
+    {"nome": "Igor Jesus",             "gols": 11, "assists": 5,  "valor_milhoes": 18.0,
+     "clube": "Nottingham Forest",  "liga": "Premier League"},
+    {"nome": "Igor Thiago",            "gols": 11, "assists": 4,  "valor_milhoes": 22.0,
+     "clube": "Brentford",          "liga": "Premier League"},
+    {"nome": "Andreas Pereira",        "gols": 6,  "assists": 9,  "valor_milhoes": 15.0,
+     "clube": "Palmeiras",          "liga": "Brasileirao"},
+    {"nome": "Vinicius Junior",        "gols": 9,  "assists": 7,  "valor_milhoes": 180.0,
+     "clube": "Real Madrid",        "liga": "LaLiga"},
+    {"nome": "Richarlison",            "gols": 5,  "assists": 2,  "valor_milhoes": 45.0,
+     "clube": "Tottenham",          "liga": "Premier League"},
+    {"nome": "Antony Matheus",         "gols": 4,  "assists": 3,  "valor_milhoes": 30.0,
+     "clube": "Real Betis",         "liga": "LaLiga"},
+    {"nome": "Gabriel Jesus",          "gols": 5,  "assists": 3,  "valor_milhoes": 40.0,
+     "clube": "Arsenal",            "liga": "Premier League"},
+    {"nome": "Casemiro",               "gols": 2,  "assists": 2,  "valor_milhoes": 20.0,
+     "clube": "Manchester United",  "liga": "Premier League"},
+    {"nome": "Joao Gomes",             "gols": 1,  "assists": 3,  "valor_milhoes": 28.0,
+     "clube": "Wolverhampton",      "liga": "Premier League"},
+    # ── Europeus ─────────────────────────────────────────────────────────────
+    {"nome": "Lamine Yamal",           "gols": 18, "assists": 16, "valor_milhoes": 180.0,
+     "clube": "Barcelona",          "liga": "LaLiga"},
+    {"nome": "Antoine Griezmann",      "gols": 16, "assists": 11, "valor_milhoes": 20.0,
+     "clube": "Atletico Madrid",    "liga": "LaLiga"},
+    {"nome": "Bruno Fernandes",        "gols": 15, "assists": 17, "valor_milhoes": 65.0,
+     "clube": "Manchester United",  "liga": "Premier League"},
+    {"nome": "Erling Haaland",         "gols": 27, "assists": 6,  "valor_milhoes": 200.0,
+     "clube": "Manchester City",    "liga": "Premier League"},
+    {"nome": "Lautaro Martinez",       "gols": 20, "assists": 8,  "valor_milhoes": 110.0,
+     "clube": "Inter Milan",        "liga": "Serie A"},
+    {"nome": "Pedri Gonzalez",         "gols": 9,  "assists": 13, "valor_milhoes": 90.0,
+     "clube": "Barcelona",          "liga": "LaLiga"},
+    {"nome": "Kylian Mbappe",          "gols": 18, "assists": 7,  "valor_milhoes": 250.0,
+     "clube": "Real Madrid",        "liga": "LaLiga"},
+    {"nome": "Jack Grealish",          "gols": 4,  "assists": 5,  "valor_milhoes": 75.0,
+     "clube": "Manchester City",    "liga": "Premier League"},
+    {"nome": "Riyad Mahrez",           "gols": 5,  "assists": 4,  "valor_milhoes": 12.0,
+     "clube": "Al Ahli",            "liga": "Saudi Pro League"},
 ]
 
 

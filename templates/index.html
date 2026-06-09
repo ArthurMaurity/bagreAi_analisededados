@@ -606,7 +606,7 @@ table.dt td.gl-nome { font-weight: 700; letter-spacing: .5px; }
       <!-- SCOUT -->
       <div id="s-scout" class="section">
         <div class="stitle">🔍 Scout de Jogador</div>
-        <div class="sdesc">Busca e calcula o Índice PediRato via API externa com cache 24h.</div>
+        <div class="sdesc">Busca automática via waterfall: API ao vivo → Transfermarkt → FBref → cache.</div>
         <div class="card bagre-card">
           <div class="ctitle">Busca</div>
           <div class="frow">
@@ -614,11 +614,8 @@ table.dt td.gl-nome { font-weight: 700; letter-spacing: .5px; }
               <label>Nome do jogador *</label>
               <input id="sc-nome" class="bagre-input" type="text" placeholder="ex: Neymar Jr.">
             </div>
-            <div class="fg"><label>Valor manual (€M)</label><input id="sc-val" class="bagre-input" type="number" step="0.1" min="0" placeholder="opcional"></div>
-            <div class="fg"><label>Gols</label><input id="sc-gols" class="bagre-input" type="number" min="0" placeholder="opcional"></div>
-            <div class="fg"><label>Assists</label><input id="sc-ast" class="bagre-input" type="number" min="0" placeholder="opcional"></div>
           </div>
-          <button class="btn-p bagre-btn" onclick="doScout()">BUSCAR JOGADOR</button>
+          <button class="btn-p bagre-btn" onclick="doScout()">BUSCAR</button>
         </div>
         <div id="scout-out"></div>
       </div>
@@ -1177,21 +1174,27 @@ function readTbl(tid, fields){
 }
 
 /* ── SCOUT ──────────────────────────────────────────────────── */
+const FONTE_BADGE = {
+  api_principal:  `<span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:.65rem;font-weight:700;letter-spacing:1px;background:rgba(57,255,20,.15);color:#39FF14;border:1px solid #39FF14;margin-left:8px">🔴 Ao Vivo</span>`,
+  transfermarkt:  `<span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:.65rem;font-weight:700;letter-spacing:1px;background:rgba(90,160,255,.15);color:#5aa0ff;border:1px solid #5aa0ff;margin-left:8px">💰 Transfermarkt</span>`,
+  fbref:          `<span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:.65rem;font-weight:700;letter-spacing:1px;background:rgba(150,150,150,.15);color:#aaa;border:1px solid #666;margin-left:8px">📊 FBref</span>`,
+  cache:          `<span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:.65rem;font-weight:700;letter-spacing:1px;background:rgba(150,150,150,.15);color:#aaa;border:1px solid #666;margin-left:8px">📦 Cache</span>`,
+  cache_expirado: `<span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:.65rem;font-weight:700;letter-spacing:1px;background:rgba(255,170,0,.12);color:#fa0;border:1px solid #fa0;margin-left:8px">⚠️ Cache desatualizado</span>`,
+};
+
 async function doScout(override){
   const nome = override||$('sc-nome').value.trim();
   const out=$('scout-out');
   if(!nome){ err(out,'Informe o nome do jogador.'); return; }
   $('sc-nome').value = '';
-  const val=$('sc-val').value, gols=$('sc-gols').value, ast=$('sc-ast').value;
-  if((val&&parseFloat(val)<0)||(gols&&parseFloat(gols)<0)||(ast&&parseFloat(ast)<0))
-    return err(out,'Valores não podem ser negativos.');
   spin(out);
-  let url=`/v1/scout?nome=${encodeURIComponent(nome)}`;
-  if(val)  url+=`&valor_mercado=${val}`;
-  if(gols) url+=`&gols=${gols}`;
-  if(ast)  url+=`&assists=${ast}`;
+  const url=`/v1/scout?nome=${encodeURIComponent(nome)}`;
   try {
     const d = await api('GET', url);
+    if(d.status === 'unavailable'){
+      out.innerHTML=`<div class="e" style="font-size:.88rem;padding:13px 16px">⚠ ${esc(d.aviso||'Nenhuma fonte de dados respondeu.')}</div>`;
+      return;
+    }
     renderScout(out, d, nome);
     toast('ok', 'Scout: ' + (d.nome||nome));
   } catch(e){
@@ -1202,7 +1205,7 @@ async function doScout(override){
 }
 
 function renderScout(el, d, nome){
-  const sc = d.pedirato_score??d.score??0;
+  const sc = d.pedirato_score??d.score??d.pedirato??0;
   const cls = d.classificacao||(sc>=7?'PediRato':sc<=3?'Pedigree':'Regular');
   const scoreCol = sc>6.5?'#ff3131':sc<3.5?'#39FF14':'#fff';
   const barCol   = sc>6.5?'#ff3131':sc<3.5?'#39FF14':'#888';
@@ -1212,19 +1215,12 @@ function renderScout(el, d, nome){
     idade: d.idade||d.age||'—', valor_milhoes: d.valor_mercado_milhoes??d.valor_milhoes??'—',
     gols: d.gols??'—', assists: d.assists??'—', pedirato_score: sc, classificacao: cls,
   };
-  const apiGols  = d.gols  ?? 0;
-  const apiAst   = d.assists ?? 0;
-  const apiValor = parseFloat(d.valor_mercado_milhoes ?? d.valor_milhoes ?? 0);
-  const isFallback = apiGols === 0 && apiAst === 0 && apiValor <= 1.0;
-  const warningBanner = isFallback
-    ? `<div style="background:rgba(255,215,0,.08);border:1px solid #FFD700;border-radius:4px;padding:8px 12px;margin-bottom:12px;color:#FFD700;font-size:.83rem">⚠️ API não retornou dados. Preencha Gols, Assists e Valor manualmente.</div>`
-    : '';
+  const fonteBadge = FONTE_BADGE[d.fonte] || '';
   el.innerHTML=`
     <div class="sc">
-      ${warningBanner}
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px">
         <div>
-          <div class="sc-name">${esc(jdata.nome)}</div>
+          <div class="sc-name">${esc(jdata.nome)}${fonteBadge}</div>
           <div class="sc-meta">${esc(jdata.clube)} · ${esc(jdata.liga)} · ${esc(String(jdata.idade))} anos</div>
         </div>
         ${badge(cls)}

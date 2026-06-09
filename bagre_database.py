@@ -77,6 +77,9 @@ class BagreDatabase:
             """)
 
         self._seed_usuarios()
+        removidos = self.limpar_cache_invalido()
+        if removidos:
+            print(f"[DB] {removidos} entrada(s) de cache inválido removida(s).")
 
     # ── SEED DE USUÁRIOS DE TESTE ──────────────────────────────────────────────
     def _seed_usuarios(self):
@@ -217,6 +220,15 @@ class BagreDatabase:
 
         return json.loads(row["dados_json"])
 
+    def buscar_cache_stale(self, nome_normalizado: str) -> dict | None:
+        """Retorna dados em cache ignorando o limite de 24h (fallback de último recurso)."""
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT dados_json FROM jogadores_cache WHERE nome_normalizado = ?",
+                (nome_normalizado,),
+            ).fetchone()
+        return json.loads(row["dados_json"]) if row else None
+
     def salvar_cache(self, nome: str, dados: dict):
         """Insere ou atualiza o cache de um jogador."""
         agora = datetime.now().isoformat()
@@ -229,6 +241,36 @@ class BagreDatabase:
                 "dados_json = excluded.dados_json, atualizado_em = excluded.atualizado_em",
                 (nome, dados_json, agora),
             )
+
+    def limpar_cache_invalido(self) -> int:
+        """
+        Remove entradas de cache com gols=0, assists=0 e pedirato=0 —
+        resultados de lookups fracassados que foram acidentalmente persistidos.
+        Retorna o número de linhas removidas.
+        """
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT id, dados_json FROM jogadores_cache"
+            ).fetchall()
+            ids_invalidos = []
+            for row in rows:
+                try:
+                    d = json.loads(row["dados_json"])
+                    if (
+                        d.get("gols", 1) == 0
+                        and d.get("assists", 1) == 0
+                        and d.get("pedirato", 1) == 0
+                    ):
+                        ids_invalidos.append(row["id"])
+                except Exception:
+                    pass
+            if ids_invalidos:
+                conn.execute(
+                    f"DELETE FROM jogadores_cache WHERE id IN "
+                    f"({','.join('?' * len(ids_invalidos))})",
+                    ids_invalidos,
+                )
+        return len(ids_invalidos)
 
 
 # ── INICIALIZAÇÃO STANDALONE ───────────────────────────────────────────────────
