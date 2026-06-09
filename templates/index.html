@@ -490,10 +490,6 @@ table.dt td.gl-nome { font-weight: 700; letter-spacing: .5px; }
           📉 Ciclo de Vida<span class="lbadge">🔒 diretor</span>
           <span class="ttip">Requer plano Diretor</span>
         </li>
-        <li data-sec="s-gini" data-req="gini" onclick="nav(this)">
-          ⚖️ Concentração Gini<span class="lbadge">🔒 diretor</span>
-          <span class="ttip">Requer plano Diretor</span>
-        </li>
         <li data-sec="s-docx" data-req="relatorio_docx" onclick="nav(this)">
           📄 Relatório DOCX<span class="lbadge">🔒 diretor</span>
           <span class="ttip">Requer plano Diretor</span>
@@ -590,12 +586,22 @@ table.dt td.gl-nome { font-weight: 700; letter-spacing: .5px; }
             </div>
           </div>
 
-          <div class="dash-card bagre-card" data-sec="s-gini" data-req="gini">
-            <div class="dash-ic">⚖️</div>
-            <div class="dash-t">Concentração Gini</div>
-            <div class="dash-d">Coeficiente de Gini e Curva de Lorenz para valor por clube.</div>
+          <div class="dash-card bagre-card" data-sec="s-docx" data-req="relatorio_docx">
+            <div class="dash-ic">📄</div>
+            <div class="dash-t">Relatório DOCX</div>
+            <div class="dash-d">Gera relatório Word completo com tabela, gráficos e metodologia.</div>
             <div class="dash-foot">
-              <button class="btn-s" onclick="goSection('s-gini')">ABRIR</button>
+              <button class="btn-s" onclick="goSection('s-docx')">ABRIR</button>
+              <span class="dash-lock"></span>
+            </div>
+          </div>
+
+          <div class="dash-card bagre-card" data-sec="s-golden" data-req="golden_list">
+            <div class="dash-ic">🏆</div>
+            <div class="dash-t">Golden List</div>
+            <div class="dash-d">Ranking dos melhores Pedigrees — oportunidades subvalorizadas.</div>
+            <div class="dash-foot">
+              <button class="btn-s" onclick="goSection('s-golden')">ABRIR</button>
               <span class="dash-lock"></span>
             </div>
           </div>
@@ -606,7 +612,7 @@ table.dt td.gl-nome { font-weight: 700; letter-spacing: .5px; }
       <!-- SCOUT -->
       <div id="s-scout" class="section">
         <div class="stitle">🔍 Scout de Jogador</div>
-        <div class="sdesc">Busca automática via waterfall: API ao vivo → Transfermarkt → FBref → cache.</div>
+        <div class="sdesc">Calcula o Índice PediRato = (Gols + Assistências) / Valor de Mercado · waterfall: API ao vivo → Transfermarkt → FBref → cache.</div>
         <div class="card bagre-card">
           <div class="ctitle">Busca</div>
           <div class="frow">
@@ -623,15 +629,12 @@ table.dt td.gl-nome { font-weight: 700; letter-spacing: .5px; }
       <!-- HYPE INDEX -->
       <div id="s-hype" class="section">
         <div class="stitle">📈 Hype Index</div>
-        <div class="sdesc">Regressão linear Performance × Valor. Detecta PediRatos. Mínimo 3 jogadores.</div>
+        <div class="sdesc">Regressão linear Performance × Valor. Detecta PediRatos. Mínimo 3 jogadores. Dados buscados automaticamente.</div>
         <div class="card bagre-card">
-          <div class="ctitle">Jogadores (mín. 3)</div>
-          <table class="dt" id="hype-tbl">
-            <thead><tr><th>Nome</th><th>Valor €M</th><th>Gols</th><th>Assists</th><th></th></tr></thead>
-            <tbody></tbody>
-          </table>
-          <button class="btn-add" onclick="addRow('hype-tbl',['nome','valor_milhoes','gols','assists'])">+ Adicionar</button><br>
-          <button class="btn-p bagre-btn" onclick="doHype()">ANALISAR</button>
+          <div class="ctitle">Jogadores (mín. 3) — busca automática</div>
+          <div class="name-list" id="hype-names"></div>
+          <button class="btn-add" onclick="addNameRow('hype-names')">+ Adicionar jogador</button><br>
+          <button class="btn-p bagre-btn" style="margin-top:10px" onclick="doHype()">ANALISAR</button>
         </div>
         <div id="hype-out"></div>
       </div>
@@ -639,24 +642,21 @@ table.dt td.gl-nome { font-weight: 700; letter-spacing: .5px; }
       <!-- ESPELHO PEDIGREE -->
       <div id="s-esp" class="section">
         <div class="stitle">🎯 Espelho Pedigree</div>
-        <div class="sdesc">Similaridade cosseno — encontra os 3 mais similares ao referencial com valor &lt;60%.</div>
+        <div class="sdesc">Similaridade cosseno — encontra os 3 mais similares ao referencial com valor &lt;60%. Dados buscados automaticamente.</div>
         <div class="card bagre-card">
           <div class="ctitle">Jogador Referencial</div>
           <div class="frow">
-            <div class="fg" style="flex:2"><label>Nome *</label><input id="ref-nome" class="bagre-input" type="text" placeholder="ex: Vinicius Jr."></div>
-            <div class="fg"><label>Gols *</label><input id="ref-gols" class="bagre-input" type="number" min="0" placeholder="ex: 21"></div>
-            <div class="fg"><label>Assists *</label><input id="ref-ast" class="bagre-input" type="number" min="0" placeholder="ex: 8"></div>
-            <div class="fg"><label>Valor €M *</label><input id="ref-val" class="bagre-input" type="number" step="0.1" min="0" placeholder="ex: 180"></div>
+            <div class="fg" style="flex:2">
+              <label>Nome *</label>
+              <input id="ref-nome" class="bagre-input" type="text" placeholder="ex: Kylian Mbappe">
+            </div>
           </div>
         </div>
         <div class="card bagre-card">
-          <div class="ctitle">Pool de Candidatos (mín. 1)</div>
-          <table class="dt" id="pool-tbl">
-            <thead><tr><th>Nome</th><th>Gols</th><th>Assists</th><th>Valor €M</th><th></th></tr></thead>
-            <tbody></tbody>
-          </table>
-          <button class="btn-add" onclick="addRow('pool-tbl',['nome','gols','assists','valor_milhoes'])">+ Adicionar</button><br>
-          <button class="btn-p bagre-btn" onclick="doEsp()">ANALISAR</button>
+          <div class="ctitle">Pool de Candidatos (mín. 1) — busca automática</div>
+          <div class="name-list" id="pool-names"></div>
+          <button class="btn-add" onclick="addNameRow('pool-names')">+ Adicionar candidato</button><br>
+          <button class="btn-p bagre-btn" style="margin-top:10px" onclick="doEsp()">ANALISAR</button>
         </div>
         <div id="esp-out"></div>
       </div>
@@ -664,33 +664,15 @@ table.dt td.gl-nome { font-weight: 700; letter-spacing: .5px; }
       <!-- CICLO DE VIDA -->
       <div id="s-ciclo" class="section">
         <div class="stitle">📉 Ciclo de Vida</div>
-        <div class="sdesc">Regressão polinomial Idade × Valor. Estima pico e janela de revenda. Mínimo 3.</div>
+        <div class="sdesc">Regressão polinomial Idade × Valor. Estima pico e janela de revenda. Dados buscados automaticamente. Mínimo 3.</div>
         <div class="card bagre-card">
-          <div class="ctitle">Jogadores (mín. 3)</div>
-          <table class="dt" id="ciclo-tbl">
-            <thead><tr><th>Nome</th><th>Idade</th><th>Valor €M</th><th></th></tr></thead>
-            <tbody></tbody>
-          </table>
-          <button class="btn-add" onclick="addRow('ciclo-tbl',['nome','idade','valor_milhoes'])">+ Adicionar</button><br>
-          <button class="btn-p bagre-btn" onclick="doCiclo()">ANALISAR</button>
+          <div class="ctitle">Jogadores (mín. 3) — busca automática</div>
+          <div class="name-list" id="ciclo-names"></div>
+          <button class="btn-add" onclick="addNameRow('ciclo-names')">+ Adicionar jogador</button><br>
+          <div id="ciclo-age-warnings"></div>
+          <button class="btn-p bagre-btn" style="margin-top:10px" onclick="doCiclo()">ANALISAR</button>
         </div>
         <div id="ciclo-out"></div>
-      </div>
-
-      <!-- GINI -->
-      <div id="s-gini" class="section">
-        <div class="stitle">⚖️ Concentração Gini</div>
-        <div class="sdesc">Coeficiente de Gini e Curva de Lorenz para valor por clube. Mínimo 2 clubes.</div>
-        <div class="card bagre-card">
-          <div class="ctitle">Clubes (mín. 2)</div>
-          <table class="dt" id="gini-tbl">
-            <thead><tr><th>Clube</th><th>Valor Total Elenco €M</th><th></th></tr></thead>
-            <tbody></tbody>
-          </table>
-          <button class="btn-add" onclick="addRow('gini-tbl',['clube','valor_total_elenco_milhoes'])">+ Adicionar</button><br>
-          <button class="btn-p bagre-btn" onclick="doGini()">ANALISAR</button>
-        </div>
-        <div id="gini-out"></div>
       </div>
 
       <!-- DOCX -->
@@ -718,12 +700,9 @@ table.dt td.gl-nome { font-weight: 700; letter-spacing: .5px; }
         </div>
 
         <div class="card bagre-card">
-          <div class="ctitle">Pool de Jogadores (opcional — vazio = dataset padrão)</div>
-          <table class="dt" id="golden-tbl">
-            <thead><tr><th>Nome</th><th>Valor €M</th><th>Gols</th><th>Assists</th><th></th></tr></thead>
-            <tbody></tbody>
-          </table>
-          <button class="btn-add" onclick="addRow('golden-tbl',['nome','valor_milhoes','gols','assists'])">+ Adicionar jogador</button>
+          <div class="ctitle">Pool de Jogadores (opcional — vazio = dataset padrão) — busca automática</div>
+          <div class="name-list" id="golden-names"></div>
+          <button class="btn-add" onclick="addNameRow('golden-names')">+ Adicionar jogador</button>
           <br>
           <div class="frow" style="align-items:flex-end;margin-top:10px">
             <div class="fg" style="max-width:140px">
@@ -731,7 +710,7 @@ table.dt td.gl-nome { font-weight: 700; letter-spacing: .5px; }
               <input id="golden-topn" class="bagre-input" type="number" min="1" max="50" value="10">
             </div>
             <button class="btn-p bagre-btn" onclick="doGoldenList()">GERAR GOLDEN LIST</button>
-            <button class="btn-s" onclick="clearGoldenTbl()" style="margin-left:4px">USAR DATASET PADRÃO</button>
+            <button class="btn-s" onclick="clearGoldenNames()" style="margin-left:4px">USAR DATASET PADRÃO</button>
           </div>
         </div>
         <div id="golden-out"></div>
@@ -811,7 +790,7 @@ function img(url){
 }
 
 /* ════════════════════════════════════════════════════════════════
-   CHART.JS — gráficos interativos (Hype, Ciclo, Gini) no frontend.
+   CHART.JS — gráficos interativos (Hype, Ciclo) no frontend.
    Tema Cyberpunk: fundo transparente, grid #333, séries #39FF14/#FF3131.
    O Espelho Pedigree continua usando o radar PNG (img()).
    ════════════════════════════════════════════════════════════════ */
@@ -904,33 +883,6 @@ function buildCicloChart(canvasId, d){
   });
 }
 
-/* GINI — Curva de Lorenz + linha de igualdade perfeita. */
-function buildGiniChart(canvasId, d){
-  const tab = d.tabela || [];
-  const n = tab.length || 1;
-  const lorenz = [{x:0, y:0}];
-  tab.forEach((c,i)=>{ lorenz.push({ x:(i+1)/n, y:(c['concentracao_acumulada_%']||0)/100, clube:c.clube }); });
-  const eq = [{x:0,y:0},{x:1,y:1}];
-  makeChart(canvasId, {
-    type:'line',
-    data:{datasets:[
-      { label:'Curva de Lorenz (Gini '+(d.gini??'')+')', data:lorenz,
-        borderColor:NEON, backgroundColor:'rgba(57,255,20,.12)',
-        borderWidth:2.5, pointRadius:4, pointHoverRadius:7, fill:true, tension:0 },
-      { label:'Igualdade perfeita', data:eq, borderColor:'#ffffff',
-        borderWidth:1.5, borderDash:[6,4], pointRadius:0, fill:false }
-    ]},
-    options:{ responsive:true, maintainAspectRatio:false,
-      scales:{
-        x:{ type:'linear', min:0, max:1, title:{display:true, text:'Proporção acumulada de clubes', color:SUB},
-            grid:{color:GRID}, ticks:{color:INK} },
-        y:{ min:0, max:1, title:{display:true, text:'Proporção acumulada do valor', color:SUB},
-            grid:{color:GRID}, ticks:{color:INK} }
-      },
-      plugins:cyberPlugins(c=>{ const p=c.raw;
-        return (p.clube?p.clube+' — ':'')+Math.round(p.x*100)+'% clubes · '+Math.round(p.y*100)+'% valor'; }) }
-  });
-}
 function badge(cls){
   if(!cls) return '';
   const c=cls.toLowerCase();
@@ -1002,23 +954,18 @@ function boot(me){
     }
   });
 
-  // seed empty rows
-  if(!$('hype-tbl').querySelector('tbody tr')){
-    addRow('hype-tbl',['nome','valor_milhoes','gols','assists']);
-    addRow('hype-tbl',['nome','valor_milhoes','gols','assists']);
-    addRow('hype-tbl',['nome','valor_milhoes','gols','assists']);
+  // pre-populate name lists
+  if(!$('hype-names').children.length){
+    ['Arrascaeta','Vinicius Junior','Kylian Mbappe'].forEach(n=>addNameRow('hype-names',n));
   }
-  if(!$('ciclo-tbl').querySelector('tbody tr')){
-    addRow('ciclo-tbl',['nome','idade','valor_milhoes']);
-    addRow('ciclo-tbl',['nome','idade','valor_milhoes']);
-    addRow('ciclo-tbl',['nome','idade','valor_milhoes']);
+  if(!$('pool-names').children.length){
+    ['Arrascaeta','Griezmann','Bruno Fernandes'].forEach(n=>addNameRow('pool-names',n));
   }
-  if(!$('gini-tbl').querySelector('tbody tr')){
-    addRow('gini-tbl',['clube','valor_total_elenco_milhoes']);
-    addRow('gini-tbl',['clube','valor_total_elenco_milhoes']);
+  if(!$('ref-nome').value){
+    $('ref-nome').value='Kylian Mbappe';
   }
-  if(!$('pool-tbl').querySelector('tbody tr')){
-    addRow('pool-tbl',['nome','gols','assists','valor_milhoes']);
+  if(!$('ciclo-names').children.length){
+    ['Endrick Felipe','Raphinha','Erling Haaland'].forEach(n=>addNameRow('ciclo-names',n));
   }
 
   const first = document.querySelector('#sidebar ul li:not(.locked)');
@@ -1121,7 +1068,7 @@ function refreshDash(){
     const lockEl = card.querySelector('.dash-lock');
     if(req && !funcoes.includes(req)){
       card.classList.add('locked');
-      const tier = ['gini','ciclo_vida','relatorio_docx'].includes(req) ? 'diretor' : 'olheiro+';
+      const tier = ['ciclo_vida','relatorio_docx','golden_list'].includes(req) ? 'diretor' : 'olheiro+';
       if(lockEl) lockEl.textContent = '🔒 ' + tier;
     } else {
       card.classList.remove('locked');
@@ -1133,9 +1080,6 @@ function refreshDash(){
 /* DYNAMIC TABLES */
 const PH = {nome:'Nome',clube:'Nome do Clube',idade:'',gols:'',assists:'',
             valor_milhoes:'',valor_total_elenco_milhoes:'Valor €M'};
-const TABLE_OUT = {'hype-tbl':'hype-out','ciclo-tbl':'ciclo-out','gini-tbl':'gini-out'};
-
-function clearOut(tid){ const o=$(TABLE_OUT[tid]); if(o) o.innerHTML=''; }
 
 function addRow(tid, fields){
   clearOut(tid);
@@ -1173,6 +1117,52 @@ function readTbl(tid, fields){
   return rows;
 }
 
+/* ── NAME-LIST HELPERS ──────────────────────────────────────── */
+const IDADES = {
+  'arrascaeta':32,'vinicius junior':24,'kylian mbappe':26,'erling haaland':24,
+  'endrick felipe':18,'raphinha':28,'griezmann':33,'bruno fernandes':30,
+  'pedri':22,'gavi':20,'lamine yamal':17,'rodri':28,'jude bellingham':21,
+  'phil foden':24,'bukayo saka':23,'jamal musiala':22,'florian wirtz':21,
+  'federico valverde':26,'arda guler':19,'camavinga':22,'tchouameni':24,
+  'dani olmo':26,'leroy sane':29,'niclas fullkrug':32,'harry kane':31,
+  'heung-min son':32,'marcus rashford':27,'gabriel martinelli':23,'cody gakpo':25,
+  'xavi simons':22,
+};
+
+function addNameRow(listId, prefill){
+  const div=$(listId);
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;gap:6px;margin-bottom:6px;align-items:center';
+  const inp=document.createElement('input');
+  inp.type='text'; inp.className='bagre-input name-inp';
+  inp.placeholder='Nome do jogador'; inp.style.flex='1';
+  if(prefill) inp.value=prefill;
+  const btn=document.createElement('button');
+  btn.className='btn-rm'; btn.textContent='✕';
+  btn.onclick=()=>row.remove();
+  row.appendChild(inp); row.appendChild(btn);
+  div.appendChild(row);
+  return inp;
+}
+
+function readNames(listId){
+  return Array.from(document.querySelectorAll(`#${listId} .name-inp`))
+    .map(i=>i.value.trim()).filter(n=>n.length>=3);
+}
+
+async function fetchScouts(names, outEl){
+  outEl.innerHTML=`<div class="w" style="color:#ffd700">🔍 Buscando dados de ${names.length} jogadores...</div>`;
+  const results=await Promise.all(names.map(n=>
+    api('GET',`/v1/scout?nome=${encodeURIComponent(n)}`).catch(e=>({status:'error',nome:n,_err:e}))
+  ));
+  const valid=[], warns=[];
+  results.forEach((r,i)=>{ if(r.status==='success') valid.push(r); else warns.push(names[i]); });
+  let warnHtml='';
+  if(warns.length) warnHtml=warns.map(n=>`<div class="w" style="color:#ffd700;font-size:.82rem">⚠️ Sem dados para '${esc(n)}' — ignorado</div>`).join('');
+  outEl.innerHTML=warnHtml;
+  return {valid, warns};
+}
+
 /* ── SCOUT ──────────────────────────────────────────────────── */
 const FONTE_BADGE = {
   api_principal:  `<span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:.65rem;font-weight:700;letter-spacing:1px;background:rgba(57,255,20,.15);color:#39FF14;border:1px solid #39FF14;margin-left:8px">🔴 Ao Vivo</span>`,
@@ -1206,22 +1196,30 @@ async function doScout(override){
 
 function renderScout(el, d, nome){
   const sc = d.pedirato_score??d.score??d.pedirato??0;
-  const cls = d.classificacao||(sc>=7?'PediRato':sc<=3?'Pedigree':'Regular');
-  const scoreCol = sc>6.5?'#ff3131':sc<3.5?'#39FF14':'#fff';
-  const barCol   = sc>6.5?'#ff3131':sc<3.5?'#39FF14':'#888';
-  const pct = Math.min(100,(sc/10)*100).toFixed(0);
+  const cls = d.ranking_contexto||d.classificacao||(sc>1.5?'Pedigree':sc>0.5?'Regular':'PediRato');
+  const scoreCol = cls==='PediRato'?'#ff3131':cls==='Pedigree'?'#39FF14':'#fff';
+  const barCol   = cls==='PediRato'?'#ff3131':cls==='Pedigree'?'#39FF14':'#888';
+  const pct = Math.min(100,(sc/3)*100).toFixed(0);
   const jdata = {
     nome: d.nome||nome, clube: d.clube||d.team||'—', liga: d.liga||d.league||'—',
     idade: d.idade||d.age||'—', valor_milhoes: d.valor_mercado_milhoes??d.valor_milhoes??'—',
     gols: d.gols??'—', assists: d.assists??'—', pedirato_score: sc, classificacao: cls,
   };
   const fonteBadge = FONTE_BADGE[d.fonte] || '';
+  const lims = d.limitacoes_metodologicas||[];
+  const limsHtml = lims.length ? `
+    <details style="margin-top:10px;font-size:.78rem">
+      <summary style="cursor:pointer;color:var(--muted)">ℹ️ Sobre o Índice PediRato</summary>
+      <ul style="margin:6px 0 0 16px;color:var(--muted);line-height:1.6">
+        ${lims.map(l=>`<li>${esc(l)}</li>`).join('')}
+      </ul>
+    </details>` : '';
   el.innerHTML=`
     <div class="sc">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px">
         <div>
           <div class="sc-name">${esc(jdata.nome)}${fonteBadge}</div>
-          <div class="sc-meta">${esc(jdata.clube)} · ${esc(jdata.liga)} · ${esc(String(jdata.idade))} anos</div>
+          <div class="sc-meta">${esc(jdata.clube)} · ${esc(jdata.liga)}</div>
         </div>
         ${badge(cls)}
       </div>
@@ -1229,14 +1227,15 @@ function renderScout(el, d, nome){
         <div class="sc-stat"><span class="val">€${esc(String(jdata.valor_milhoes))}M</span><span class="lbl">Valor Mercado</span></div>
         <div class="sc-stat"><span class="val">${esc(String(jdata.gols))}</span><span class="lbl">Gols</span></div>
         <div class="sc-stat"><span class="val">${esc(String(jdata.assists))}</span><span class="lbl">Assists</span></div>
-        <div class="sc-stat"><span class="val" style="color:${scoreCol}">${typeof sc==='number'?sc.toFixed(1):sc}</span><span class="lbl">PediRato Score</span></div>
+        <div class="sc-stat"><span class="val" style="color:${scoreCol}">${typeof sc==='number'?sc.toFixed(2):sc}</span><span class="lbl">PediRato Score</span></div>
       </div>
       <div class="sbar-wrap">
-        <div class="sbar-lbl">Índice PediRato (0 = Pedigree · 10 = PediRato)</div>
+        <div class="sbar-lbl">Índice PediRato = (Gols + Assists) / Valor€M · Pedigree &gt;1.5 · PediRato ≤0.5</div>
         <div class="sbar"><div class="sbar-fill" style="width:${pct}%;background:${barCol}"></div></div>
       </div>
       <button class="btn-s" onclick='addSessao(${JSON.stringify(JSON.stringify(jdata))})'>+ Adicionar à Sessão</button>
       <span id="sadd-msg" style="margin-left:11px;font-size:.78rem;color:var(--muted)"></span>
+      ${limsHtml}
     </div>`;
 }
 
@@ -1262,11 +1261,12 @@ function addSessao(jsonStr){
 
 /* ── HYPE INDEX ─────────────────────────────────────────────── */
 async function doHype(){
-  const js=readTbl('hype-tbl',['nome','valor_milhoes','gols','assists']);
+  const names=readNames('hype-names');
   const out=$('hype-out');
-  if(js.length<3) return err(out,'Mínimo de 3 registros necessários para esta análise.');
-  if(js.some(j=>[j.valor_milhoes,j.gols,j.assists].some(v=>v!==null&&v<0)))
-    return err(out,'Valores não podem ser negativos.');
+  if(names.length<3) return err(out,'Mínimo de 3 jogadores necessários.');
+  const {valid}=await fetchScouts(names,out);
+  if(valid.length<3) return err(out,'Mínimo de 3 jogadores com dados disponíveis necessários.');
+  const js=valid.map(p=>({nome:p.nome,valor_milhoes:p.valor_milhoes,gols:p.gols,assists:p.assists}));
   spin(out);
   try {
     const d=await api('POST','/v1/analytics/hype-index',{jogadores:js});
@@ -1291,18 +1291,22 @@ async function doHype(){
 /* ── ESPELHO PEDIGREE ───────────────────────────────────────── */
 async function doEsp(){
   const out=$('esp-out');
-  const rn=$('ref-nome').value.trim();
-  const rg=parseFloat($('ref-gols').value);
-  const ra=parseFloat($('ref-ast').value);
-  const rv=parseFloat($('ref-val').value);
-  if(!rn||isNaN(rg)||isNaN(ra)||isNaN(rv)) return err(out,'Preencha todos os campos do referencial.');
-  if(rg<0||ra<0||rv<0) return err(out,'Valores não podem ser negativos.');
-  const pool=readTbl('pool-tbl',['nome','gols','assists','valor_milhoes']);
-  if(!pool.length) return err(out,'Adicione ao menos 1 candidato.');
+  const refNome=$('ref-nome').value.trim();
+  if(!refNome) return err(out,'Informe o nome do jogador referencial.');
+  const poolNames=readNames('pool-names');
+  if(!poolNames.length) return err(out,'Adicione ao menos 1 candidato ao pool.');
+  const allNames=[refNome,...poolNames.filter(n=>n.toLowerCase()!==refNome.toLowerCase())];
+  const {valid}=await fetchScouts(allNames,out);
+  if(!valid.length) return err(out,'Nenhum jogador com dados disponíveis.');
+  const refLow=refNome.toLowerCase();
+  const refPlayer=valid.find(p=>(p.nome||'').toLowerCase().includes(refLow))||valid[0];
+  const pool=valid.filter(p=>p!==refPlayer);
+  if(!pool.length) return err(out,'Nenhum candidato no pool com dados disponíveis.');
   spin(out);
   try {
     const d=await api('POST','/v1/analytics/espelho-pedigree',{
-      jogador_ref:{nome:rn,gols:rg,assists:ra,valor_milhoes:rv}, pool});
+      jogador_ref:{nome:refPlayer.nome,gols:refPlayer.gols,assists:refPlayer.assists,valor_milhoes:refPlayer.valor_milhoes},
+      pool:pool.map(p=>({nome:p.nome,gols:p.gols,assists:p.assists,valor_milhoes:p.valor_milhoes}))});
     toast('ok', 'Espelho Pedigree calculado');
     const rows=(d.top_3_similares||[]).map((j,i)=>`<tr>
       <td>${i+1}º</td>
@@ -1324,11 +1328,26 @@ async function doEsp(){
 
 /* ── CICLO DE VIDA ──────────────────────────────────────────── */
 async function doCiclo(){
-  const js=readTbl('ciclo-tbl',['nome','idade','valor_milhoes']);
+  const names=readNames('ciclo-names');
   const out=$('ciclo-out');
-  if(js.length<3) return err(out,'Mínimo de 3 registros necessários para esta análise.');
-  if(js.some(j=>[j.idade,j.valor_milhoes].some(v=>v!==null&&v<0)))
-    return err(out,'Valores não podem ser negativos.');
+  const ageWarn=$('ciclo-age-warnings');
+  if(ageWarn) ageWarn.innerHTML='';
+  if(names.length<3) return err(out,'Mínimo de 3 jogadores necessários.');
+  const {valid}=await fetchScouts(names,out);
+  if(valid.length<3) return err(out,'Mínimo de 3 jogadores com dados disponíveis necessários.');
+  const ageWarnings=[];
+  const js=valid.map(p=>{
+    const key=(p.nome||'').toLowerCase();
+    let idade=IDADES[key];
+    if(idade===undefined){
+      const found=Object.keys(IDADES).find(k=>k.includes(key)||key.includes(k));
+      if(found) idade=IDADES[found];
+    }
+    if(idade===undefined){ ageWarnings.push(p.nome); idade=25; }
+    return {nome:p.nome,idade,valor_milhoes:p.valor_milhoes,gols:p.gols,assists:p.assists};
+  });
+  if(ageWarnings.length&&ageWarn)
+    ageWarn.innerHTML=ageWarnings.map(n=>`<div class="w" style="color:#ffd700;font-size:.82rem">⚠️ Idade de '${esc(n)}' não encontrada — usando 25 como padrão</div>`).join('');
   spin(out);
   try {
     const d=await api('POST','/v1/analytics/ciclo-vida',{jogadores:js});
@@ -1356,57 +1375,25 @@ async function doCiclo(){
   }
 }
 
-/* ── GINI ───────────────────────────────────────────────────── */
-async function doGini(){
-  const cs=readTbl('gini-tbl',['clube','valor_total_elenco_milhoes']);
-  const out=$('gini-out');
-  if(cs.length<2) return err(out,'Mínimo de 2 registros necessários para esta análise.');
-  if(cs.some(c=>!(c.valor_total_elenco_milhoes>0)))
-    return err(out,'Preencha o valor de mercado de todos os clubes (deve ser maior que zero).');
-  spin(out);
-  try {
-    const d=await api('POST','/v1/analytics/gini',{clubes:cs});
-    toast('ok', 'Gini calculado');
-    const rows=(d.tabela||[]).map(c=>`<tr>
-      <td>${esc(c.clube)}</td><td>€${c.valor_total_elenco_milhoes}M</td>
-      <td>${(c['concentracao_acumulada_%']||0).toFixed(1)}%</td></tr>`).join('');
-    out.innerHTML=`<div class="card" style="margin-top:14px">
-      <div class="ctitle">Resultado — Gini</div>
-      <div class="krow">
-        <div class="kbox"><div class="kval">${(d.gini||0).toFixed(3)}</div><div class="klbl">Coeficiente Gini</div></div>
-        <div class="kbox"><div class="kval">${esc(d.interpretacao||'—')}</div><div class="klbl">Interpretação</div></div>
-        <div class="kbox"><div class="kval">${(d.razao||0).toFixed(1)}×</div><div class="klbl">Razão Rico/Pobre</div></div>
-      </div>
-      <div style="margin:4px 0 10px;font-size:.78rem;color:var(--muted)">
-        Mais rico: <strong style="color:#fff">${esc(d.clube_mais_rico||'—')}</strong> &nbsp;|&nbsp;
-        Mais pobre: <strong style="color:#fff">${esc(d.clube_mais_pobre||'—')}</strong>
-      </div>
-      <div class="twrap"><table class="dt"><thead><tr>
-        <th>Clube</th><th>Valor Elenco</th><th>Conc. Acumulada</th>
-      </tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="chart-box"><canvas id="chart-gini"></canvas></div></div>`;
-    buildGiniChart('chart-gini', d);
-  } catch(e){
-    if(e.status===403) err(out,'🔒 Acesso negado. Requer plano DIRETOR.');
-    else err(out,e.detail||`Erro ${e.status}`);
-  }
-}
-
 /* ── GOLDEN LIST ────────────────────────────────────────────── */
-function clearGoldenTbl(){
-  document.querySelector('#golden-tbl tbody').innerHTML='';
+function clearGoldenNames(){
+  const div=$('golden-names');
+  if(div) div.innerHTML='';
   doGoldenList();
 }
 
 async function doGoldenList(){
   const out=$('golden-out');
-  const rows=readTbl('golden-tbl',['nome','valor_milhoes','gols','assists']);
-  if(rows.some(j=>[j.valor_milhoes,j.gols,j.assists].some(v=>v!==null&&v<0)))
-    return err(out,'Valores não podem ser negativos.');
+  const names=readNames('golden-names');
   const topn=parseInt($('golden-topn').value)||10;
   if(topn<1||topn>50) return err(out,'Top N deve estar entre 1 e 50.');
+  let rows=[];
+  if(names.length){
+    const {valid}=await fetchScouts(names,out);
+    rows=valid.map(p=>({nome:p.nome,valor_milhoes:p.valor_milhoes,gols:p.gols,assists:p.assists}));
+  }
   spin(out);
-  const body = rows.length ? {jogadores: rows, top_n: topn} : {top_n: topn};
+  const body=rows.length?{jogadores:rows,top_n:topn}:{top_n:topn};
   try {
     const d=await api('POST','/v1/golden-list', body);
     toast('ok','Golden List gerada — '+d.total_pedigrees+' Pedigrees');

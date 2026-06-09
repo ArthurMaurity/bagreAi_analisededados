@@ -269,7 +269,6 @@ class GeradorRelatorios:
                 ("hype_index.png",           "Grafico 2: Hype Index - Regressao Linear"),
                 ("radar_pedigree.png",       "Grafico 3: Espelho Pedigree - Grafico Radar"),
                 ("ciclo_vida.png",           "Grafico 4: Curva de Ciclo de Vida por Idade"),
-                ("gini_liga.png",            "Grafico 5: Concentracao de Riqueza - Curva de Lorenz"),
             ]
 
             inseriu = False
@@ -313,12 +312,6 @@ class GeradorRelatorios:
                  "O residuo de cada jogador mede o quanto seu preco se afasta do esperado pela reta. "
                  "Residuo > +1 desvio padrao: PediRato (caro para o que entrega). "
                  "Residuo < -1 desvio padrao: Pedigree (barato para o que entrega)."),
-
-                ("Coeficiente de Gini — Concentracao por Liga (Frente 3)",
-                 "Metrica de desigualdade economica adaptada ao futebol. Calculada manualmente "
-                 "sobre o valor total dos elencos de uma liga. Varia de 0 (igualdade perfeita) "
-                 "a 1 (concentracao maxima). A Curva de Lorenz visualiza a distribuicao acumulada "
-                 "de riqueza entre os clubes."),
 
                 ("Espelho Pedigree — Similaridade Cosseno (Frente 5)",
                  "Normaliza as features dos jogadores (Gols, Assists, Valor) com MinMaxScaler e "

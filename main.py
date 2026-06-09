@@ -271,56 +271,6 @@ def opcao_ciclo_vida():
     plt.close()
     _perguntar_salvar(img_path)
 
-# ── [6] CONCENTRAÇÃO DE RIQUEZA — GINI ────────────────────────────────────────
-def _gini(valores):
-    v = np.sort(np.array(valores, dtype=float))
-    n = len(v)
-    if n == 0 or v.sum() == 0:
-        return 0.0
-    idx = np.arange(1, n + 1)
-    return float((2 * np.dot(idx, v) / (n * v.sum())) - (n + 1) / n)
-
-def opcao_gini():
-    print("\n--- Concentração de Riqueza por Liga (Gini) ---")
-    if not _verificar_sessao(3):
-        return
-
-    gini = _gini([j["valor_milhoes"] for j in sessao])
-    print(f"\nCoeficiente de Gini da sessão: {gini:.4f}")
-    if gini < 0.3:
-        print("Distribuição: Relativamente igualitária.")
-    elif gini < 0.5:
-        print("Distribuição: Concentração moderada.")
-    else:
-        print("Distribuição: Alta concentração de riqueza.")
-
-    vals = sorted(j["valor_milhoes"] for j in sessao)
-    n = len(vals)
-    cum_val = np.cumsum(vals) / sum(vals)
-    cum_pop = np.arange(1, n + 1) / n
-
-    img_path = "gini_lorenz.png"
-    plt.style.use('dark_background')
-    fig, ax = plt.subplots(figsize=(8, 6))
-    ax.set_facecolor("#000000")
-    fig.patch.set_facecolor("#000000")
-
-    ax.plot([0] + list(cum_pop), [0] + list(cum_val),
-            color="#39FF14", linewidth=2, label=f"Lorenz  (Gini={gini:.3f})")
-    ax.plot([0, 1], [0, 1], color="#FFFFFF", linestyle="--", label="Igualdade perfeita")
-    ax.fill_between([0] + list(cum_pop), [0] + list(cum_val),
-                    [0] + list(cum_pop), alpha=0.2, color="#39FF14")
-
-    ax.set_xlabel("Proporção de Jogadores", color="#FFFFFF")
-    ax.set_ylabel("Proporção do Valor de Mercado", color="#FFFFFF")
-    ax.set_title("Curva de Lorenz — Concentração de Valor", color="#39FF14", fontsize=14)
-    ax.tick_params(colors="#FFFFFF")
-    ax.legend(labelcolor="#FFFFFF")
-    plt.tight_layout()
-    plt.savefig(img_path, dpi=150, facecolor=fig.get_facecolor())
-    plt.close()
-    _perguntar_salvar(img_path)
-
 # ── [7] RELATÓRIO COMPLETO (.docx e .md) ──────────────────────────────────────
 def opcao_relatorio_completo():
     print("\n--- Gerar Relatorio Completo ---")
@@ -359,8 +309,7 @@ MENU = """
 |  [3] Hype Index -- Detectar PediRatos (Frente 4)           |
 |  [4] Espelho Pedigree -- Encontrar similares (Frente 5)    |
 |  [5] Ciclo de Vida -- Curva de Valor por Idade (Frente 2)  |
-|  [6] Concentracao de Riqueza por Liga -- Gini (Frente 3)   |
-|  [7] Gerar Relatorio Completo (.docx e .md)                |
+|  [6] Gerar Relatorio Completo (.docx e .md)                |
 |  [0] Sair                                                  |
 +============================================================+"""
 
@@ -370,8 +319,7 @@ _OPCOES = {
     "3": opcao_hype_index,
     "4": opcao_espelho_pedigree,
     "5": opcao_ciclo_vida,
-    "6": opcao_gini,
-    "7": opcao_relatorio_completo,
+    "6": opcao_relatorio_completo,
 }
 
 def main():

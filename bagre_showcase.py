@@ -17,7 +17,7 @@
 
  COMPLEMENTOS PONTUAIS (marcados como EXTRA, fora do escopo principal):
  ----------------------------------------------------------------------------
-   • numpy        → usado dentro de bagre_analytics para regressões/Gini e aqui
+   • numpy        → usado dentro de bagre_analytics para regressões e aqui
                     apenas para a seed de reprodutibilidade. (# EXTRA (numpy))
    • scikit-learn → LinearRegression (Hype Index) e cosine_similarity (Espelho
                     Pedigree), dentro de bagre_analytics.   (# EXTRA (sklearn))
@@ -156,7 +156,6 @@ def modo_analitico():
     # As funções das frentes 2–5 vivem em bagre_analytics (matplotlib/seaborn).
     from bagre_analytics import (
         analisar_ciclo_de_vida,
-        analisar_concentracao_liga,
         analisar_hype_index,
         espelho_pedigree,
         STATIC_DIR,
@@ -213,24 +212,6 @@ def modo_analitico():
     print(f"  → Pico estimado: {res_vida['idade_pico']} anos  |  "
           f"Janela de revenda: {res_vida['janela_revenda']}")
     graficos_gerados.append(os.path.join(STATIC_DIR, "ciclo_vida.png"))
-
-    # ──────────────────────────────────────────────────────────────────────────
-    #  FRENTE 3 — CONCENTRAÇÃO DE RIQUEZA POR LIGA (GINI)
-    # ──────────────────────────────────────────────────────────────────────────
-    subtitulo("FRENTE 3 — Concentração de Riqueza (Gini por clube)")
-    # PANDAS: groupby + sum agrega o valor de mercado dos jogadores em elencos por clube.
-    df_clubes = (
-        df.groupby("clube", as_index=False)["valor_milhoes"]
-        .sum()
-        .rename(columns={"valor_milhoes": "valor_total_elenco_milhoes"})
-    )
-    print("\n# PANDAS: elencos agregados por clube (groupby + sum):")
-    print(df_clubes.to_string(index=False))
-    # EXTRA (numpy): o coeficiente de Gini é calculado manualmente com numpy.
-    res_gini = analisar_concentracao_liga(df_clubes)
-    print(f"  → Gini = {res_gini['gini']} ({res_gini['interpretacao']})  |  "
-          f"Mais rico: {res_gini['clube_mais_rico']}  ·  Mais pobre: {res_gini['clube_mais_pobre']}")
-    graficos_gerados.append(os.path.join(STATIC_DIR, "gini_liga.png"))
 
     # ──────────────────────────────────────────────────────────────────────────
     #  FRENTE 4 — HYPE INDEX (detecção de PediRatos)  → seaborn scatter
@@ -490,10 +471,6 @@ def modo_api():
         {"nome": "B", "idade": 28, "valor_milhoes": 80},
         {"nome": "C", "idade": 34, "valor_milhoes": 20},
     ]
-    jgini = [
-        {"clube": "X", "valor_total_elenco_milhoes": 800},
-        {"clube": "Y", "valor_total_elenco_milhoes": 90},
-    ]
     jpedi = {
         "jogador_ref": {"nome": "Caro", "gols": 17, "assists": 10, "valor_milhoes": 110},
         "pool": [{"nome": "Barato", "gols": 18, "assists": 12, "valor_milhoes": 30}],
@@ -504,7 +481,6 @@ def modo_api():
         ("scout",            "GET",  "/v1/scout",                       {"nome": "Teste", "valor_mercado": 50, "gols": 10, "assists": 5}),
         ("hype_index",       "POST", "/v1/analytics/hype-index",        {"jogadores": jhype}),
         ("espelho_pedigree", "POST", "/v1/analytics/espelho-pedigree",  jpedi),
-        ("gini",             "POST", "/v1/analytics/gini",              {"clubes": jgini}),
         ("ciclo_vida",       "POST", "/v1/analytics/ciclo-vida",        {"jogadores": jvida}),
         ("relatorio_docx",   "POST", "/v1/reports/docx",                {"jogadores": [{"nome": "A", "gols": 1, "assists": 1, "valor_milhoes": 10, "pedirato": 0.2}]}),
     ]

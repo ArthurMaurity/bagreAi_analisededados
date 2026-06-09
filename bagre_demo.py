@@ -14,7 +14,6 @@ import pandas as pd
 from bagre_analytics import (
     analisar_hype_index,
     analisar_ciclo_de_vida,
-    analisar_concentracao_liga,
     espelho_pedigree,
 )
 from bagre_relatorios import GeradorRelatorios
@@ -109,18 +108,6 @@ _secao("FRENTE 2 | Ciclo de Vida — Curva de Valor por Idade")
 df_vida = df[["nome", "idade", "valor_milhoes"]].copy()
 analisar_ciclo_de_vida(df_vida)
 
-# ── 3. CONCENTRACAO POR LIGA ───────────────────────────────────────────────────
-_secao("FRENTE 3 | Concentracao de Riqueza por Liga — Gini")
-df_liga = (
-    df.groupby("liga", as_index=False)["valor_milhoes"]
-      .sum()
-      .rename(columns={"valor_milhoes": "valor_total_elenco_milhoes"})
-      .rename(columns={"liga": "clube"})
-)
-# Renomeia coluna para a interface esperada pela funcao
-df_liga.columns = ["clube", "valor_total_elenco_milhoes"]
-analisar_concentracao_liga(df_liga)
-
 # ── 4. ESPELHO PEDIGREE ────────────────────────────────────────────────────────
 _secao("FRENTE 5 | Espelho Pedigree — Similaridade Cosseno + Radar")
 idx_ref = df["valor_milhoes"].idxmax()
@@ -160,7 +147,6 @@ print("  Verifique a pasta static/ e o arquivo Relatorio_BagreAI_Demo.docx")
 print(SEP)
 print(f"\n  Graficos gerados em static/:")
 print("    ciclo_vida.png         — Frente 2")
-print("    gini_liga.png          — Frente 3")
 print("    hype_index.png         — Frente 4")
 print("    radar_pedigree.png     — Frente 5")
 print("    comparativo_pedirato.png — Sessao geral")

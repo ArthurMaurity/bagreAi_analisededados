@@ -30,10 +30,10 @@ from bagre_relatorios import GeradorRelatorios
 from bagre_analytics import (
     analisar_hype_index,
     analisar_ciclo_de_vida,
-    analisar_concentracao_liga,
     espelho_pedigree,
     pedirato_da_semana,
     golden_list,
+    LIMITACOES_PEDIRATO,
 )
 
 # ── SETUP ──────────────────────────────────────────────────────────────────────
@@ -111,10 +111,6 @@ class JogadorVida(BaseModel):
     idade: int
     valor_milhoes: float
 
-class ClubeGini(BaseModel):
-    clube: str
-    valor_total_elenco_milhoes: float
-
 class JogadorRef(BaseModel):
     nome: str
     gols: int
@@ -135,9 +131,6 @@ class HypeIndexRequest(BaseModel):
 class EspelhoPedigreeRequest(BaseModel):
     jogador_ref: JogadorRef
     pool: List[JogadorRef]
-
-class GiniRequest(BaseModel):
-    clubes: List[ClubeGini]
 
 class CicloVidaRequest(BaseModel):
     jogadores: List[JogadorVida]
@@ -269,6 +262,7 @@ def scout(
     if resultado.get("status") == "unavailable":
         return resultado
 
+    resultado["limitacoes_metodologicas"] = LIMITACOES_PEDIRATO
     db.salvar_analise(usuario["id"], "scout", {"nome": nome}, resultado)
     return resultado
 
@@ -378,40 +372,6 @@ def golden_list_endpoint(
     }
     db.salvar_analise(usuario["id"], "golden_list",
                       {"n_jogadores": len(pool) if pool else 15, "top_n": top_n}, output)
-    return output
-
-
-# ── TIER DIRETOR — GINI ────────────────────────────────────────────────────────
-@app.post("/v1/analytics/gini", tags=["Diretor"])
-@limiter.limit("5/minute")
-def gini(request: Request, req: GiniRequest, usuario: dict = Depends(get_current_user)):
-    """
-    **Tier mínimo: diretor.**
-    Coeficiente de Gini e Curva de Lorenz para concentração de riqueza por liga.
-    """
-    _verificar_tier(usuario, "gini")
-
-    if len(req.clubes) < 2:
-        raise HTTPException(status_code=422, detail="Mínimo de 2 clubes.")
-
-    df      = pd.DataFrame([c.model_dump() for c in req.clubes])
-    res     = analisar_concentracao_liga(df)
-    if "error" in res:
-        raise HTTPException(status_code=422, detail=res["error"])
-    grafico = _copiar_grafico("gini_liga.png", "gini")
-
-    output = {
-        "gini":            res["gini"],
-        "interpretacao":   res["interpretacao"],
-        "clube_mais_rico": res["clube_mais_rico"],
-        "clube_mais_pobre":res["clube_mais_pobre"],
-        "razao":           res["razao"],
-        "tabela":          res["df"][["clube","valor_total_elenco_milhoes",
-                                      "concentracao_acumulada_%"]].to_dict("records"),
-        "grafico_url":     grafico,
-    }
-    db.salvar_analise(usuario["id"], "gini",
-                      {"n_clubes": len(req.clubes)}, output)
     return output
 
 

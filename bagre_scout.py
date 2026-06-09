@@ -1,5 +1,6 @@
 from bagre_engine import BagreBackend, clean_currency
 from bagre_database import BagreDatabase
+from concurrent.futures import ThreadPoolExecutor
 import unicodedata
 
 
@@ -41,12 +42,29 @@ def realizar_scout_processado(nome_jogador, player_id=None, team_id=None):
     clube_nome = ""
     liga_nome = ""
 
+    # Processamento simultâneo — seção 4.1 do artigo
+    print(f"[PARALLEL] Buscando '{nome_jogador}' via Live API + Transfermarkt simultaneamente...")
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        _fut_busca = executor.submit(motor.buscar_jogador, nome_jogador)
+        _fut_tm    = executor.submit(motor.obter_valor_mercado, nome_jogador)
+
+    try:
+        _busca_pre = _fut_busca.result()
+    except Exception as _e:
+        print(f"[PARALLEL WARN] buscar_jogador: {_e}")
+        _busca_pre = None
+    try:
+        _tm_pre = _fut_tm.result()
+    except Exception as _e:
+        print(f"[PARALLEL WARN] obter_valor_mercado: {_e}")
+        _tm_pre = None
+
     # ── STEP 1: RapidAPI Football Live Data (+ fallback mock) ────────────────
     try:
         # Resolver player_id via busca por nome se não fornecido
         if not player_id or not str(player_id).isdigit():
             print(f"[STEP 1] Buscando sugestões para: {nome_jogador}")
-            busca = motor.buscar_jogador(nome_jogador)
+            busca = _busca_pre  # usa resultado pré-buscado em paralelo
             suggestions = (busca.get("response", {}).get("suggestions", [])
                            if busca else [])
 
@@ -147,8 +165,8 @@ def realizar_scout_processado(nome_jogador, player_id=None, team_id=None):
     # ── STEP 2: Transfermarkt (valor de mercado) ──────────────────────────────
     if valor_milhoes is None:
         try:
-            print("[STEP 2] Buscando valor no Transfermarkt...")
-            dados_tm = motor.obter_valor_mercado(nome_jogador)
+            print("[STEP 2] Usando resultado Transfermarkt pré-buscado...")
+            dados_tm = _tm_pre  # usa resultado pré-buscado em paralelo
             if dados_tm and dados_tm.get("response", {}).get("players"):
                 val_str = dados_tm["response"]["players"][0].get("marketValue", "1m")
                 valor_eur = clean_currency(val_str)
@@ -181,10 +199,17 @@ def realizar_scout_processado(nome_jogador, player_id=None, team_id=None):
         valor_milhoes = max(valor_milhoes or 1.0, 0.1)
         pedirato = (gols + assists) / valor_milhoes
 
+        if pedirato > 1.5:
+            ranking_contexto = "Pedigree"
+        elif pedirato > 0.5:
+            ranking_contexto = "Regular"
+        else:
+            ranking_contexto = "PediRato"
+
         print("-" * 40)
         print(f"ATLETA FINALIZADO: {nome_jogador.upper()}")
         print(f"ESTATÍSTICAS: {gols} Gols | {assists} Assistências")
-        print(f"VALOR: €{valor_milhoes:.2f}M  |  PEDIRATO: {pedirato:.2f}")
+        print(f"VALOR: €{valor_milhoes:.2f}M  |  PEDIRATO: {pedirato:.2f}  |  {ranking_contexto}")
         print(f"FONTE: {fonte}")
         print("-" * 40 + "\n")
 
@@ -197,6 +222,7 @@ def realizar_scout_processado(nome_jogador, player_id=None, team_id=None):
             "assists": assists,
             "valor_milhoes": valor_milhoes,
             "pedirato": pedirato,
+            "ranking_contexto": ranking_contexto,
             "fonte": fonte or "api_principal",
         }
         db.salvar_cache(nome_norm, result)

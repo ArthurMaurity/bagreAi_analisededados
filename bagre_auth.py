@@ -11,7 +11,6 @@ FUNCIONALIDADES: dict[str, list[str]] = {
     "scout":             ["varzea", "olheiro", "diretor"],
     "hype_index":        ["olheiro", "diretor"],
     "espelho_pedigree":  ["olheiro", "diretor"],
-    "gini":              ["diretor"],
     "ciclo_vida":        ["diretor"],
     "relatorio_docx":    ["diretor"],
     "golden_list":       ["diretor"],
@@ -108,7 +107,7 @@ if __name__ == "__main__":
 
     funcoes_teste = [
         "scout", "hype_index", "espelho_pedigree",
-        "gini", "ciclo_vida", "relatorio_docx",
+        "ciclo_vida", "relatorio_docx",
     ]
 
     for u in usuarios:

@@ -38,6 +38,16 @@ def _cyberpunk_ax(ax, fig):
         spine.set_edgecolor(GRAY)
 
 
+# Limitações metodológicas do Índice PediRato — seção 5.2 do artigo
+LIMITACOES_PEDIRATO = [
+    "Não considera minutos jogados",
+    "Não incorpora métricas defensivas",
+    "Não avalia o contexto tático da equipe",
+    "Não considera o nível competitivo das ligas",
+    "Possui viés ofensivo inerente à sua formulação",
+]
+
+
 # ===============================================================================
 # FRENTE 2 — CICLO DE VIDA E CURVA DE VALOR
 # ===============================================================================
@@ -132,93 +142,8 @@ def analisar_ciclo_de_vida(df: pd.DataFrame) -> dict:
 
 
 # ===============================================================================
-# FRENTE 3 — CONCENTRAÇÃO DE RIQUEZA POR LIGA (GINI)
-# ===============================================================================
-def analisar_concentracao_liga(df: pd.DataFrame) -> dict:
-    """
-    Coeficiente de Gini calculado manualmente com numpy.
-    Gera a Curva de Lorenz com área de desigualdade.
-
-    Input:  DataFrame com colunas [clube, valor_total_elenco_milhoes]
-    Output: dict com gini, interpretacao, clube mais rico/pobre, razão, df enriquecido
-    """
-    required = {"clube", "valor_total_elenco_milhoes"}
-    if not required.issubset(df.columns):
-        raise ValueError(f"DataFrame deve ter as colunas: {required}")
-    if len(df) < 2:
-        raise ValueError("Mínimo de 2 clubes para análise.")
-    if df["valor_total_elenco_milhoes"].sum() == 0:
-        return {"error": "Todos os valores são zero. Insira valores válidos."}
-
-    df = df.copy().sort_values("valor_total_elenco_milhoes").reset_index(drop=True)
-    x  = df["valor_total_elenco_milhoes"].values.astype(float)
-    n  = len(x)
-    s  = x.sum()
-
-    # Gini manual (numpy) — fórmula do CLAUDE.md
-    idx  = np.arange(1, n + 1)
-    gini = float((2 * np.dot(idx, x) / (n * s)) - (n + 1) / n)
-
-    # Lorenz
-    cum_x   = np.concatenate([[0.0], np.cumsum(x) / s])
-    cum_pop = np.concatenate([[0.0], idx / n])
-
-    mais_rico  = df.iloc[-1]
-    mais_pobre = df.iloc[0]
-    razao      = mais_rico["valor_total_elenco_milhoes"] / max(mais_pobre["valor_total_elenco_milhoes"], 0.01)
-    df["concentracao_acumulada_%"] = (np.cumsum(x) / s * 100).round(2)
-
-    if gini < 0.3:
-        interpretacao = "Baixa desigualdade"
-    elif gini < 0.5:
-        interpretacao = "Média desigualdade"
-    else:
-        interpretacao = "Alta desigualdade"
-
-    # ── Relatório textual ──────────────────────────────────────────────────────
-    print("\n" + "=" * 58)
-    print("  FRENTE 3 — CONCENTRAÇÃO DE RIQUEZA POR LIGA")
-    print("=" * 58)
-    print(f"  Coeficiente de Gini da Liga: {gini:.4f}")
-    print(f"  Interpretação:               {interpretacao}")
-    print(f"  Clube mais rico:   {mais_rico['clube']}  (€{mais_rico['valor_total_elenco_milhoes']:.1f}M)")
-    print(f"  Clube mais pobre:  {mais_pobre['clube']}  (€{mais_pobre['valor_total_elenco_milhoes']:.1f}M)")
-    print(f"  Razão rico/pobre:  {razao:.1f}×")
-    print("\n  Concentração por clube (ordem crescente de valor):")
-    print(df[["clube", "valor_total_elenco_milhoes", "concentracao_acumulada_%"]].to_string(index=False))
-    print("=" * 58)
-
-    # ── Gráfico Lorenz ─────────────────────────────────────────────────────────
-    img_path = os.path.join(STATIC_DIR, "gini_liga.png")
-    fig, ax = plt.subplots(figsize=(8, 7))
-    _cyberpunk_ax(ax, fig)
-
-    ax.plot(cum_pop, cum_x, color=GREEN, linewidth=2.5, label=f"Curva de Lorenz  (Gini = {gini:.3f})")
-    ax.plot([0, 1], [0, 1], color=WHITE, linestyle="--", linewidth=1.5, label="Igualdade perfeita")
-    ax.fill_between(cum_pop, cum_x, cum_pop, color=RED, alpha=0.3, label="Área de desigualdade")
-
-    ax.set_xlabel("Proporção acumulada de clubes", fontsize=11)
-    ax.set_ylabel("Proporção acumulada do valor de mercado", fontsize=11)
-    ax.set_title("Curva de Lorenz — Concentração de Riqueza  |  Bagre.ai",
-                 color=GREEN, fontsize=13, pad=12)
-    ax.legend(labelcolor=WHITE, facecolor=DARK, edgecolor=GRAY, fontsize=9)
-    plt.tight_layout()
-    plt.savefig(img_path, dpi=150, facecolor=BG)
-    plt.close()
-    print(f"  Gráfico salvo: {img_path}\n")
-
-    return {
-        "gini": round(gini, 4),
-        "interpretacao": interpretacao,
-        "clube_mais_rico": mais_rico["clube"],
-        "clube_mais_pobre": mais_pobre["clube"],
-        "razao": round(razao, 2),
-        "df": df,
-    }
-
-
-# ===============================================================================
 # FRENTE 4 — HYPE INDEX (DETECÇÃO DE PEDIRATO)
+# Regressão linear simples — conforme metodologia da seção 4.2 do artigo
 # ===============================================================================
 def analisar_hype_index(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -322,6 +247,7 @@ def analisar_hype_index(df: pd.DataFrame) -> pd.DataFrame:
 
 # ===============================================================================
 # FRENTE 5 — ESPELHO PEDIGREE (SIMILARIDADE COSSENO + RADAR)
+# Distância cosseno normalizada — conforme metodologia da seção 4.3 do artigo
 # ===============================================================================
 def espelho_pedigree(jogador_ref: dict, pool: list) -> pd.DataFrame:
     """
@@ -584,8 +510,9 @@ def pedirato_da_semana(pool=None):
     """
     Retorna o destaque semanal do tier Várzea.
     Sem chamadas externas — 100% estático.
-    Rota pelo ranking PediRato usando o número ISO da semana como seed,
-    garantindo estabilidade dentro da semana e variação semanal automática.
+    Rota APENAS pelo top-50% do ranking (verdadeiros Pedigrees) usando o
+    número ISO da semana como seed, garantindo que nunca um PediRato apareça
+    como destaque e que o resultado mude automaticamente a cada semana.
     """
     jogadores = [dict(j) for j in (pool if pool is not None else _POOL_PADRAO)]
 
@@ -597,8 +524,11 @@ def pedirato_da_semana(pool=None):
 
     pool_sorted = sorted(jogadores, key=lambda j: j["pedirato"], reverse=True)
 
+    # Restringe a rotação ao top-50% para garantir sempre um Pedigree legítimo
+    top_pedigrees = pool_sorted[: max(1, len(pool_sorted) // 2)]
+
     semana = datetime.date.today().isocalendar()[1]
-    destaque = pool_sorted[semana % len(pool_sorted)]
+    destaque = top_pedigrees[semana % len(top_pedigrees)]
 
     return {
         "nome":          destaque["nome"],

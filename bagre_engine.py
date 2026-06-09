@@ -216,12 +216,15 @@ class BagreBackend:
         """
         Consulta o valor de mercado atualizado via API do Transfermarkt.
         Essencial para o cálculo do denominador no Índice PediRato.
+        O campo 'marketValue' retornado (ex: '€15m', '€500k') é tratado por
+        clean_currency() em bagre_scout.py — seção 3.3 do artigo.
         """
         url = "https://transfermarkt.p.rapidapi.com/players/search"
         headers_tm = {
             "x-rapidapi-host": "transfermarkt.p.rapidapi.com",
             "x-rapidapi-key": self.headers["x-rapidapi-key"]
         }
+        # Tratamento de strings monetárias — seção 3.3 do artigo
         return self._executar_get(url, params={"query": nome_jogador}, headers=headers_tm)
 
     # ==========================================
