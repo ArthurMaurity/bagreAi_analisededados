@@ -6,12 +6,9 @@
 <title>BAGRE.AI — Inteligência de Mercado no Futebol</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- Chart.js (CDN cdnjs) — gráficos interativos renderizados no frontend -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 /* ── TOKENS ──────────────────────────────────────────────────── */
 :root {
-  /* Cores — tema Cyberpunk Football */
   --bg:       #000000;
   --panel:    #1A1A1A;
   --panel2:   #111111;
@@ -19,31 +16,16 @@
   --red:      #FF3131;
   --white:    #FFFFFF;
   --muted:    #888888;
-  /* Bordas / brilho (derivados das cores acima) */
-  --border:   1px solid var(--green);
-  --glow:     0 0 8px var(--green), 0 0 20px var(--green);
-  --glow-sm:  0 0 4px var(--green);
-  /* Tipografia */
-  --font:     'Rajdhani', sans-serif;
-  --fs-base:  15px;
-  /* Raios de borda */
-  --radius:     6px;
-  --radius-md:  4px;
-  --radius-sm:  3px;
-  /* Espaçamentos */
-  --sp-xs:    4px;
-  --sp-sm:    8px;
-  --sp-md:    12px;
-  --sp-lg:    18px;
-  --sp-xl:    22px;
-  /* Dimensões de layout */
+  --border:   1px solid #39FF14;
+  --glow:     0 0 8px #39FF14, 0 0 20px #39FF14;
+  --glow-sm:  0 0 4px #39FF14;
   --sw:       220px;
   --hh:       56px;
   --sbh:      62px;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; background: var(--bg); color: var(--white);
-             font-family: var(--font); font-size: var(--fs-base); overflow: hidden; }
+             font-family: 'Rajdhani', sans-serif; font-size: 15px; overflow: hidden; }
 a { color: var(--green); }
 input, button { font-family: inherit; }
 button { cursor: pointer; }
@@ -148,9 +130,9 @@ button { cursor: pointer; }
           text-transform: uppercase; margin-bottom: 5px; }
 .sdesc  { color: var(--muted); font-size: .82rem; letter-spacing: 1px; margin-bottom: 22px; }
 
-/* CARDS — classe reutilizável .bagre-card (legado .card usa a mesma regra) */
-.bagre-card, .card { background: var(--panel); border: var(--border); border-radius: var(--radius);
-        padding: var(--sp-lg) var(--sp-xl); margin-bottom: var(--sp-lg); }
+/* CARDS */
+.card { background: var(--panel); border: var(--border); border-radius: 6px;
+        padding: 18px 22px; margin-bottom: 18px; }
 .ctitle { font-size: .7rem; font-weight: 700; letter-spacing: 3px;
           text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
 
@@ -158,22 +140,21 @@ button { cursor: pointer; }
 .frow { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
 .fg { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 150px; }
 .fg label { font-size: .68rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
-/* classe reutilizável .bagre-input (legado .fg input usa a mesma regra) */
-.bagre-input, .fg input {
+.fg input {
   background: var(--bg); color: var(--white); border: 1px solid #333;
-  border-radius: var(--radius-sm); padding: var(--sp-sm) 10px; font-size: .88rem; transition: border-color .2s;
+  border-radius: 3px; padding: 8px 10px; font-size: .88rem; transition: border-color .2s;
 }
-.bagre-input:focus, .fg input:focus { outline: none; border-color: var(--green); }
-.bagre-input::placeholder, .fg input::placeholder { color: #444; }
+.fg input:focus { outline: none; border-color: var(--green); }
+.fg input::placeholder { color: #444; }
 
-/* BUTTONS — classe reutilizável .bagre-btn (legado .btn-p usa a mesma regra) */
-.bagre-btn, .btn-p {
-  background: var(--green); color: #000; border: none; border-radius: var(--radius-sm);
-  padding: 10px var(--sp-xl); font-size: .88rem; font-weight: 700;
+/* BUTTONS */
+.btn-p {
+  background: var(--green); color: #000; border: none; border-radius: 3px;
+  padding: 10px 22px; font-size: .88rem; font-weight: 700;
   letter-spacing: 2px; text-transform: uppercase; transition: box-shadow .2s;
 }
-.bagre-btn:hover, .btn-p:hover { box-shadow: var(--glow); }
-.bagre-btn:disabled, .btn-p:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+.btn-p:hover { box-shadow: var(--glow); }
+.btn-p:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
 .btn-s {
   background: transparent; color: var(--green); border: var(--border);
   border-radius: 3px; padding: 7px 16px; font-size: .82rem; font-weight: 600;
@@ -211,8 +192,8 @@ table.dt input { background: transparent; border: none; color: var(--white);
                  font-size: .83rem; font-family: inherit; width: 100%; }
 table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
 
-/* BADGES — classe reutilizável .bagre-badge (legado .badge usa a mesma regra) */
-.bagre-badge, .badge { display: inline-block; padding: 2px 9px; border-radius: var(--radius-sm);
+/* BADGES */
+.badge { display: inline-block; padding: 2px 9px; border-radius: 3px;
          font-size: .68rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
 .b-ped  { background: rgba(57,255,20,.13); color: var(--green); border: 1px solid var(--green); }
 .b-reg  { background: rgba(255,255,255,.07); color: var(--white); border: 1px solid #555; }
@@ -245,10 +226,6 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
 .chart-wrap { margin-top: 14px; }
 .chart-wrap img { max-width: 100%; border-radius: 4px; border: 1px solid #2a2a2a; }
 .chart-ts { font-size: .62rem; color: #444; margin-top: 3px; letter-spacing: 1px; }
-/* Chart.js — container responsivo (canvas transparente sobre o card escuro) */
-.chart-box { position: relative; height: 340px; margin-top: 14px;
-             background: var(--panel2); border: 1px solid #2a2a2a;
-             border-radius: 4px; padding: 10px; }
 
 /* MSGS */
 .e { color: var(--red); background: rgba(255,49,49,.07); border: 1px solid rgba(255,49,49,.28);
@@ -264,20 +241,6 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
         padding: 12px 18px; flex: 1; min-width: 120px; text-align: center; }
 .kval { font-size: 1.5rem; font-weight: 700; color: var(--green); }
 .klbl { font-size: .62rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
-
-/* ── DASHBOARD ───────────────────────────────────────────────── */
-.dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-             gap: var(--sp-lg); margin-top: var(--sp-md); }
-.dash-card { display: flex; flex-direction: column; margin-bottom: 0; }
-.dash-ic   { font-size: 1.8rem; margin-bottom: var(--sp-sm); }
-.dash-t    { font-size: 1rem; font-weight: 700; letter-spacing: 1px;
-             color: var(--green); margin-bottom: var(--sp-xs); }
-.dash-d    { font-size: .8rem; color: var(--muted); line-height: 1.5;
-             flex: 1; margin-bottom: var(--sp-md); }
-.dash-foot { display: flex; align-items: center; gap: var(--sp-md); }
-.dash-lock { font-size: .72rem; color: var(--muted); letter-spacing: 1px; white-space: nowrap; }
-.dash-card.locked { opacity: .55; }
-.dash-card.locked .dash-t { color: var(--muted); }
 
 /* ── SESSION BAR ─────────────────────────────────────────────── */
 #session-bar {
@@ -305,75 +268,6 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
 #sdocx-btn:hover { box-shadow: var(--glow); }
 #sdocx-btn:disabled { opacity: .4; cursor: not-allowed; }
 #sdl { font-size: .78rem; }
-
-/* ════════════════════════════════════════════════════════════════
-   MICROINTERAÇÕES COSMÉTICAS (Etapa 3) — apenas visual, sem lógica
-   ════════════════════════════════════════════════════════════════ */
-
-/* ── Transição de seção: fade + slide ── */
-@keyframes secIn { from { opacity: 0; transform: translateY(10px); }
-                   to   { opacity: 1; transform: translateY(0); } }
-.section.active { animation: secIn .3s ease both; }
-
-/* ── Entrada dos cards de resultado ── */
-@keyframes cardIn { from { opacity: 0; transform: translateY(8px) scale(.99); }
-                    to   { opacity: 1; transform: translateY(0) scale(1); } }
-.card { animation: cardIn .35s ease both; }
-
-/* ── Skeleton loaders (substituem "PROCESSANDO...") ── */
-@keyframes shimmer { 0% { background-position: -420px 0; }
-                     100% { background-position: 420px 0; } }
-.sk-card { margin-top: 14px; }
-.sk-line, .sk-box {
-  background: linear-gradient(90deg, #161616 25%, #242424 50%, #161616 75%);
-  background-size: 420px 100%; animation: shimmer 1.25s infinite linear;
-  border-radius: var(--radius-sm);
-}
-.sk-line { height: 13px; margin-bottom: 10px; }
-.sk-line.w40  { width: 40%; }
-.sk-line.w60  { width: 60%; }
-.sk-line.w100 { width: 100%; }
-.sk-grid { display: flex; gap: 12px; margin: 14px 0; flex-wrap: wrap; }
-.sk-box  { height: 54px; flex: 1; min-width: 90px; }
-
-/* ── Hover/active: botões ── */
-.bagre-btn, .btn-p, .btn-s, .btn-add, .btn-rm, #login-btn, #sdocx-btn {
-  transition: box-shadow .2s, transform .08s ease, background .2s, border-color .2s;
-}
-.bagre-btn:hover, .btn-p:hover { transform: translateY(-1px); }
-.bagre-btn:active, .btn-p:active, .btn-s:active, .btn-add:active,
-.btn-rm:active, #login-btn:active, #sdocx-btn:active { transform: translateY(1px); }
-.btn-s:hover { transform: translateY(-1px); }
-
-/* ── Hover/active: menu lateral ── */
-#sidebar ul li:active:not(.locked) { transform: translateX(2px); }
-
-/* ── Hover: cards do dashboard ── */
-.dash-card { transition: transform .15s ease, border-color .2s, box-shadow .2s; }
-.dash-card:not(.locked):hover {
-  transform: translateY(-3px); border-color: var(--green); box-shadow: var(--glow-sm);
-}
-
-/* ── Toast notifications (canto superior direito) ── */
-#toast-wrap {
-  position: fixed; top: 16px; right: 16px; z-index: 2000;
-  display: flex; flex-direction: column; gap: 10px; pointer-events: none;
-}
-@keyframes toastIn  { from { opacity: 0; transform: translateX(40px); }
-                      to   { opacity: 1; transform: translateX(0); } }
-@keyframes toastOut { from { opacity: 1; transform: translateX(0); }
-                      to   { opacity: 0; transform: translateX(40px); } }
-.toast {
-  display: flex; align-items: center; gap: 9px; min-width: 220px; max-width: 340px;
-  padding: 11px 15px; border-radius: var(--radius-md); font-size: .82rem;
-  font-weight: 600; letter-spacing: .5px; background: var(--panel);
-  animation: toastIn .28s ease both; pointer-events: auto;
-}
-.toast.toast-out { animation: toastOut .3s ease forwards; }
-.toast-ic { font-size: 1rem; font-weight: 700; }
-.toast-ok  { border: 1px solid var(--green); color: var(--green); box-shadow: var(--glow-sm); }
-.toast-err { border: 1px solid var(--red);   color: var(--red);
-             box-shadow: 0 0 4px var(--red); }
 </style>
 </head>
 <body>
@@ -405,12 +299,6 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
   <div id="body-row">
 
     <nav id="sidebar">
-      <div class="nav-lbl">Painel</div>
-      <ul>
-        <li data-sec="s-dash" onclick="nav(this)">
-          📊 Dashboard
-        </li>
-      </ul>
       <div class="nav-lbl">Análises</div>
       <ul>
         <li data-sec="s-scout" data-req="scout" onclick="nav(this)">
@@ -441,104 +329,22 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
 
     <div id="main">
 
-      <!-- DASHBOARD -->
-      <div id="s-dash" class="section">
-        <div class="stitle">📊 Dashboard</div>
-        <div class="sdesc">Visão geral da sua sessão e atalhos para as análises.</div>
-
-        <!-- KPIs -->
-        <div class="krow">
-          <div class="kbox">
-            <div class="kval" id="dash-kpi-sessao">0</div>
-            <div class="klbl">Análises na Sessão</div>
-          </div>
-          <div class="kbox">
-            <div class="kval" id="dash-kpi-pedirato">—</div>
-            <div class="klbl">PediRato Médio</div>
-          </div>
-          <div class="kbox">
-            <div class="kval" id="dash-kpi-ultimo">—</div>
-            <div class="klbl">Último Jogador</div>
-          </div>
-          <div class="kbox">
-            <div class="kval" id="dash-kpi-plano">—</div>
-            <div class="klbl">Plano Atual</div>
-          </div>
-        </div>
-
-        <!-- GRID DE FRENTES -->
-        <div class="ctitle">Análises Disponíveis</div>
-        <div id="dash-grid" class="dash-grid">
-
-          <div class="dash-card bagre-card" data-sec="s-scout" data-req="scout">
-            <div class="dash-ic">🔍</div>
-            <div class="dash-t">Scout de Jogador</div>
-            <div class="dash-d">Busca e calcula o Índice PediRato via API externa com cache de 24h.</div>
-            <div class="dash-foot">
-              <button class="btn-s" onclick="goSection('s-scout')">ABRIR</button>
-              <span class="dash-lock"></span>
-            </div>
-          </div>
-
-          <div class="dash-card bagre-card" data-sec="s-hype" data-req="hype_index">
-            <div class="dash-ic">📈</div>
-            <div class="dash-t">Hype Index</div>
-            <div class="dash-d">Regressão linear Performance × Valor para detectar PediRatos.</div>
-            <div class="dash-foot">
-              <button class="btn-s" onclick="goSection('s-hype')">ABRIR</button>
-              <span class="dash-lock"></span>
-            </div>
-          </div>
-
-          <div class="dash-card bagre-card" data-sec="s-esp" data-req="espelho_pedigree">
-            <div class="dash-ic">🎯</div>
-            <div class="dash-t">Espelho Pedigree</div>
-            <div class="dash-d">Similaridade cosseno — encontra os 3 mais parecidos com valor &lt;60%.</div>
-            <div class="dash-foot">
-              <button class="btn-s" onclick="goSection('s-esp')">ABRIR</button>
-              <span class="dash-lock"></span>
-            </div>
-          </div>
-
-          <div class="dash-card bagre-card" data-sec="s-ciclo" data-req="ciclo_vida">
-            <div class="dash-ic">📉</div>
-            <div class="dash-t">Ciclo de Vida</div>
-            <div class="dash-d">Regressão polinomial Idade × Valor: estima pico e janela de revenda.</div>
-            <div class="dash-foot">
-              <button class="btn-s" onclick="goSection('s-ciclo')">ABRIR</button>
-              <span class="dash-lock"></span>
-            </div>
-          </div>
-
-          <div class="dash-card bagre-card" data-sec="s-gini" data-req="gini">
-            <div class="dash-ic">⚖️</div>
-            <div class="dash-t">Concentração Gini</div>
-            <div class="dash-d">Coeficiente de Gini e Curva de Lorenz para valor por clube.</div>
-            <div class="dash-foot">
-              <button class="btn-s" onclick="goSection('s-gini')">ABRIR</button>
-              <span class="dash-lock"></span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
       <!-- SCOUT -->
       <div id="s-scout" class="section">
         <div class="stitle">🔍 Scout de Jogador</div>
         <div class="sdesc">Busca e calcula o Índice PediRato via API externa com cache 24h.</div>
-        <div class="card bagre-card">
+        <div class="card">
           <div class="ctitle">Busca</div>
           <div class="frow">
             <div class="fg" style="flex:2">
               <label>Nome do jogador *</label>
-              <input id="sc-nome" class="bagre-input" type="text" placeholder="ex: Neymar Jr.">
+              <input id="sc-nome" type="text" placeholder="ex: Neymar Jr.">
             </div>
-            <div class="fg"><label>Valor manual (€M)</label><input id="sc-val" class="bagre-input" type="number" step="0.1" min="0" placeholder="opcional"></div>
-            <div class="fg"><label>Gols</label><input id="sc-gols" class="bagre-input" type="number" min="0" placeholder="opcional"></div>
-            <div class="fg"><label>Assists</label><input id="sc-ast" class="bagre-input" type="number" min="0" placeholder="opcional"></div>
+            <div class="fg"><label>Valor manual (€M)</label><input id="sc-val" type="number" step="0.1" min="0" placeholder="opcional"></div>
+            <div class="fg"><label>Gols</label><input id="sc-gols" type="number" min="0" placeholder="opcional"></div>
+            <div class="fg"><label>Assists</label><input id="sc-ast" type="number" min="0" placeholder="opcional"></div>
           </div>
-          <button class="btn-p bagre-btn" onclick="doScout()">BUSCAR JOGADOR</button>
+          <button class="btn-p" onclick="doScout()">BUSCAR JOGADOR</button>
         </div>
         <div id="scout-out"></div>
       </div>
@@ -547,14 +353,14 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
       <div id="s-hype" class="section">
         <div class="stitle">📈 Hype Index</div>
         <div class="sdesc">Regressão linear Performance × Valor. Detecta PediRatos. Mínimo 3 jogadores.</div>
-        <div class="card bagre-card">
+        <div class="card">
           <div class="ctitle">Jogadores (mín. 3)</div>
           <table class="dt" id="hype-tbl">
             <thead><tr><th>Nome</th><th>Valor €M</th><th>Gols</th><th>Assists</th><th></th></tr></thead>
             <tbody></tbody>
           </table>
           <button class="btn-add" onclick="addRow('hype-tbl',['nome','valor_milhoes','gols','assists'])">+ Adicionar</button><br>
-          <button class="btn-p bagre-btn" onclick="doHype()">ANALISAR</button>
+          <button class="btn-p" onclick="doHype()">ANALISAR</button>
         </div>
         <div id="hype-out"></div>
       </div>
@@ -563,23 +369,23 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
       <div id="s-esp" class="section">
         <div class="stitle">🎯 Espelho Pedigree</div>
         <div class="sdesc">Similaridade cosseno — encontra os 3 mais similares ao referencial com valor &lt;60%.</div>
-        <div class="card bagre-card">
+        <div class="card">
           <div class="ctitle">Jogador Referencial</div>
           <div class="frow">
-            <div class="fg" style="flex:2"><label>Nome *</label><input id="ref-nome" class="bagre-input" type="text" placeholder="ex: Vinicius Jr."></div>
-            <div class="fg"><label>Gols *</label><input id="ref-gols" class="bagre-input" type="number" min="0" placeholder="ex: 21"></div>
-            <div class="fg"><label>Assists *</label><input id="ref-ast" class="bagre-input" type="number" min="0" placeholder="ex: 8"></div>
-            <div class="fg"><label>Valor €M *</label><input id="ref-val" class="bagre-input" type="number" step="0.1" min="0" placeholder="ex: 180"></div>
+            <div class="fg" style="flex:2"><label>Nome *</label><input id="ref-nome" type="text" placeholder="ex: Vinicius Jr."></div>
+            <div class="fg"><label>Gols *</label><input id="ref-gols" type="number" min="0" placeholder="ex: 21"></div>
+            <div class="fg"><label>Assists *</label><input id="ref-ast" type="number" min="0" placeholder="ex: 8"></div>
+            <div class="fg"><label>Valor €M *</label><input id="ref-val" type="number" step="0.1" min="0" placeholder="ex: 180"></div>
           </div>
         </div>
-        <div class="card bagre-card">
+        <div class="card">
           <div class="ctitle">Pool de Candidatos (mín. 1)</div>
           <table class="dt" id="pool-tbl">
             <thead><tr><th>Nome</th><th>Gols</th><th>Assists</th><th>Valor €M</th><th></th></tr></thead>
             <tbody></tbody>
           </table>
           <button class="btn-add" onclick="addRow('pool-tbl',['nome','gols','assists','valor_milhoes'])">+ Adicionar</button><br>
-          <button class="btn-p bagre-btn" onclick="doEsp()">ANALISAR</button>
+          <button class="btn-p" onclick="doEsp()">ANALISAR</button>
         </div>
         <div id="esp-out"></div>
       </div>
@@ -588,14 +394,14 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
       <div id="s-ciclo" class="section">
         <div class="stitle">📉 Ciclo de Vida</div>
         <div class="sdesc">Regressão polinomial Idade × Valor. Estima pico e janela de revenda. Mínimo 3.</div>
-        <div class="card bagre-card">
+        <div class="card">
           <div class="ctitle">Jogadores (mín. 3)</div>
           <table class="dt" id="ciclo-tbl">
             <thead><tr><th>Nome</th><th>Idade</th><th>Valor €M</th><th></th></tr></thead>
             <tbody></tbody>
           </table>
           <button class="btn-add" onclick="addRow('ciclo-tbl',['nome','idade','valor_milhoes'])">+ Adicionar</button><br>
-          <button class="btn-p bagre-btn" onclick="doCiclo()">ANALISAR</button>
+          <button class="btn-p" onclick="doCiclo()">ANALISAR</button>
         </div>
         <div id="ciclo-out"></div>
       </div>
@@ -604,14 +410,14 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
       <div id="s-gini" class="section">
         <div class="stitle">⚖️ Concentração Gini</div>
         <div class="sdesc">Coeficiente de Gini e Curva de Lorenz para valor por clube. Mínimo 2 clubes.</div>
-        <div class="card bagre-card">
+        <div class="card">
           <div class="ctitle">Clubes (mín. 2)</div>
           <table class="dt" id="gini-tbl">
             <thead><tr><th>Clube</th><th>Valor Total Elenco €M</th><th></th></tr></thead>
             <tbody></tbody>
           </table>
           <button class="btn-add" onclick="addRow('gini-tbl',['clube','valor_total_elenco_milhoes'])">+ Adicionar</button><br>
-          <button class="btn-p bagre-btn" onclick="doGini()">ANALISAR</button>
+          <button class="btn-p" onclick="doGini()">ANALISAR</button>
         </div>
         <div id="gini-out"></div>
       </div>
@@ -620,11 +426,11 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
       <div id="s-docx" class="section">
         <div class="stitle">📄 Relatório DOCX</div>
         <div class="sdesc">Gera relatório Word completo com tabela, gráficos e metodologia da sessão atual.</div>
-        <div class="card bagre-card">
+        <div class="card">
           <div class="ctitle">Sessão Atual</div>
           <div id="docx-info"></div>
           <br>
-          <button class="btn-p bagre-btn" id="docx-btn" onclick="doDocx()">GERAR RELATÓRIO .DOCX</button>
+          <button class="btn-p" id="docx-btn" onclick="doDocx()">GERAR RELATÓRIO .DOCX</button>
           <div id="docx-out"></div>
         </div>
       </div>
@@ -644,18 +450,15 @@ table.dt input:focus { outline: 1px solid var(--green); border-radius: 2px; }
   <div id="plan-modal" onclick="if(event.target===this)this.style.display='none'"
        style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.78);
               align-items:center;justify-content:center;">
-    <div style="background:var(--panel);border:var(--border);border-radius:8px;
+    <div style="background:#1A1A1A;border:1px solid #39FF14;border-radius:8px;
                 padding:32px 36px;max-width:380px;width:90%;text-align:center;
                 box-shadow:0 0 24px rgba(57,255,20,.35)">
       <div id="plan-modal-msg" style="font-size:.95rem;font-weight:600;letter-spacing:1px;
-           color:var(--white);margin-bottom:22px;line-height:1.6"></div>
+           color:#fff;margin-bottom:22px;line-height:1.6"></div>
       <button onclick="$('plan-modal').style.display='none'"
-              class="btn-p bagre-btn" style="padding:9px 30px">ENTENDIDO</button>
+              class="btn-p" style="padding:9px 30px">ENTENDIDO</button>
     </div>
   </div>
-
-  <!-- TOAST CONTAINER -->
-  <div id="toast-wrap"></div>
 
 </div><!-- /app -->
 
@@ -668,160 +471,12 @@ window.sessao = [];
 /* UTILS */
 const $ = id => document.getElementById(id);
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function spin(el){
-  // Skeleton loader (substitui o antigo texto "PROCESSANDO...")
-  el.innerHTML=`
-    <div class="sk-card">
-      <div class="sk-line w40" style="height:18px"></div>
-      <div class="sk-line w60"></div>
-      <div class="sk-grid">
-        <div class="sk-box"></div><div class="sk-box"></div>
-        <div class="sk-box"></div><div class="sk-box"></div>
-      </div>
-      <div class="sk-line w100" style="height:130px;margin-top:6px"></div>
-    </div>`;
-}
-function err(el,m){
-  const txt = esc(typeof m==='object'?JSON.stringify(m):m);
-  el.innerHTML=`<div class="e">⚠ ${txt}</div>`;
-  toast('err', m);   // notificação cosmética (não altera o fluxo de dados)
-}
-/* Toast notifications — verde (sucesso) / vermelho (erro) */
-function toast(type, msg){
-  const wrap = $('toast-wrap'); if(!wrap) return;
-  const t = document.createElement('div');
-  t.className = 'toast ' + (type==='ok' ? 'toast-ok' : 'toast-err');
-  const icon = type==='ok' ? '✓' : '⚠';
-  t.innerHTML = `<span class="toast-ic">${icon}</span><span>${esc(typeof msg==='object'?JSON.stringify(msg):msg)}</span>`;
-  wrap.appendChild(t);
-  setTimeout(()=>{ t.classList.add('toast-out'); setTimeout(()=>t.remove(), 320); }, 3200);
-}
+function spin(el){ el.innerHTML='<div class="spinner">PROCESSANDO...</div>'; }
+function err(el,m){ el.innerHTML=`<div class="e">⚠ ${esc(typeof m==='object'?JSON.stringify(m):m)}</div>`; }
 function img(url){
   if(!url) return '';
   return `<div class="chart-wrap"><img src="${url}?t=${Date.now()}" alt="grafico">
           <div class="chart-ts">Gerado em ${new Date().toLocaleTimeString('pt-BR')}</div></div>`;
-}
-
-/* ════════════════════════════════════════════════════════════════
-   CHART.JS — gráficos interativos (Hype, Ciclo, Gini) no frontend.
-   Tema Cyberpunk: fundo transparente, grid #333, séries #39FF14/#FF3131.
-   O Espelho Pedigree continua usando o radar PNG (img()).
-   ════════════════════════════════════════════════════════════════ */
-const NEON = '#39FF14', RAT = '#FF3131', GRID = '#333333', INK = '#cccccc', SUB = '#888888';
-window._charts = window._charts || {};
-
-/* Cria/recria um gráfico no canvas, destruindo instância anterior. */
-function makeChart(canvasId, config){
-  if(typeof Chart === 'undefined') return false;     // CDN indisponível → degrada sem quebrar
-  const cv = $(canvasId);
-  if(!cv) return false;
-  if(window._charts[canvasId]){ try{ window._charts[canvasId].destroy(); }catch(_){ } }
-  window._charts[canvasId] = new Chart(cv, config);
-  return true;
-}
-
-/* Eixos no tema escuro Cyberpunk. */
-function cyberScales(xTitle, yTitle){
-  return {
-    x:{ title:{display:true, text:xTitle, color:SUB},
-        grid:{color:GRID}, ticks:{color:INK} },
-    y:{ title:{display:true, text:yTitle, color:SUB},
-        grid:{color:GRID}, ticks:{color:INK} }
-  };
-}
-/* Plugins comuns: legenda interativa (clicável) + tooltips. */
-function cyberPlugins(tooltipLabel){
-  return {
-    legend:{ labels:{ color:'#fff', usePointStyle:true } },
-    tooltip:{ backgroundColor:'#1A1A1A', borderColor:NEON, borderWidth:1,
-              titleColor:NEON, bodyColor:'#fff',
-              callbacks: tooltipLabel ? {label:tooltipLabel} : {} }
-  };
-}
-
-/* HYPE INDEX — scatter Performance × Valor + reta de regressão. */
-function buildHypeChart(canvasId, d){
-  const js = d.jogadores || [];
-  const cor = {PediRato:RAT, Pedigree:NEON, Regular:SUB};
-  const grupos = {PediRato:[], Pedigree:[], Regular:[]};
-  js.forEach(j=>{
-    const cls = grupos[j.classificacao] ? j.classificacao : 'Regular';
-    grupos[cls].push({x:j.performance, y:j.valor_milhoes, nome:j.nome});
-  });
-  // Reta de regressão = pontos (performance, valor_predito) ordenados por x.
-  const reta = js.map(j=>({x:j.performance, y:j.valor_predito})).sort((a,b)=>a.x-b.x);
-  const datasets = [];
-  ['Pedigree','Regular','PediRato'].forEach(cls=>{
-    if(grupos[cls].length) datasets.push({
-      label:cls, data:grupos[cls], type:'scatter',
-      backgroundColor:cor[cls], borderColor:cor[cls],
-      pointRadius:6, pointHoverRadius:9
-    });
-  });
-  datasets.push({ label:'Regressão', data:reta, type:'line', borderColor:'#ffffff',
-    borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false });
-  makeChart(canvasId, {
-    type:'scatter',
-    data:{datasets},
-    options:{ responsive:true, maintainAspectRatio:false,
-      scales:cyberScales('Performance (Gols + Assists)','Valor de Mercado (€M)'),
-      plugins:cyberPlugins(c=>{ const p=c.raw;
-        return (p.nome?p.nome+' — ':'')+'perf '+p.x+' · €'+p.y+'M'; }) }
-  });
-}
-
-/* CICLO DE VIDA — scatter Idade × Valor + curva polinomial (grau 2). */
-function buildCicloChart(canvasId, d){
-  const tab = d.tabela || [];
-  const pts = tab.map(j=>({x:j.idade, y:j.valor_milhoes, nome:j.nome}));
-  const c = d.coeficientes || {};
-  const a = +c.a||0, b = +c.b||0, cc = +c.c||0;
-  const xs = tab.map(j=>j.idade);
-  let xmin = Math.min.apply(null, xs), xmax = Math.max.apply(null, xs);
-  if(!isFinite(xmin)){ xmin=15; xmax=40; }
-  const curva = []; const N = 40;
-  for(let i=0;i<=N;i++){ const x = xmin + (xmax-xmin)*i/N; curva.push({x:x, y:a*x*x + b*x + cc}); }
-  makeChart(canvasId, {
-    type:'scatter',
-    data:{datasets:[
-      { label:'Jogadores', data:pts, type:'scatter',
-        backgroundColor:NEON, borderColor:NEON, pointRadius:6, pointHoverRadius:9 },
-      { label:'Curva (grau 2)', data:curva, type:'line', borderColor:'#ffffff',
-        borderWidth:2, pointRadius:0, fill:false, tension:0.3 }
-    ]},
-    options:{ responsive:true, maintainAspectRatio:false,
-      scales:cyberScales('Idade','Valor de Mercado (€M)'),
-      plugins:cyberPlugins(c=>{ const p=c.raw;
-        return (p.nome?p.nome+' — ':'')+(Math.round(p.x*10)/10)+' anos · €'+(Math.round(p.y*10)/10)+'M'; }) }
-  });
-}
-
-/* GINI — Curva de Lorenz + linha de igualdade perfeita. */
-function buildGiniChart(canvasId, d){
-  const tab = d.tabela || [];
-  const n = tab.length || 1;
-  const lorenz = [{x:0, y:0}];
-  tab.forEach((c,i)=>{ lorenz.push({ x:(i+1)/n, y:(c['concentracao_acumulada_%']||0)/100, clube:c.clube }); });
-  const eq = [{x:0,y:0},{x:1,y:1}];
-  makeChart(canvasId, {
-    type:'line',
-    data:{datasets:[
-      { label:'Curva de Lorenz (Gini '+(d.gini??'')+')', data:lorenz,
-        borderColor:NEON, backgroundColor:'rgba(57,255,20,.12)',
-        borderWidth:2.5, pointRadius:4, pointHoverRadius:7, fill:true, tension:0 },
-      { label:'Igualdade perfeita', data:eq, borderColor:'#ffffff',
-        borderWidth:1.5, borderDash:[6,4], pointRadius:0, fill:false }
-    ]},
-    options:{ responsive:true, maintainAspectRatio:false,
-      scales:{
-        x:{ type:'linear', min:0, max:1, title:{display:true, text:'Proporção acumulada de clubes', color:SUB},
-            grid:{color:GRID}, ticks:{color:INK} },
-        y:{ min:0, max:1, title:{display:true, text:'Proporção acumulada do valor', color:SUB},
-            grid:{color:GRID}, ticks:{color:INK} }
-      },
-      plugins:cyberPlugins(c=>{ const p=c.raw;
-        return (p.clube?p.clube+' — ':'')+Math.round(p.x*100)+'% clubes · '+Math.round(p.y*100)+'% valor'; }) }
-  });
 }
 function badge(cls){
   if(!cls) return '';
@@ -885,7 +540,7 @@ function boot(me){
   const funcoes = me.funcionalidades||[];
   document.querySelectorAll('#sidebar ul li').forEach(li=>{
     const req = li.dataset.req;
-    if(!req || funcoes.includes(req)){   // itens sem data-req (ex.: Dashboard) ficam sempre liberados
+    if(funcoes.includes(req)){
       li.classList.remove('locked');
       const lb=li.querySelector('.lbadge');
       if(lb) lb.remove();
@@ -935,49 +590,7 @@ function nav(li){
   if(sec){
     sec.classList.add('active');
     if(sid==='s-docx') refreshDocx();
-    if(sid==='s-dash') refreshDash();
   }
-}
-
-/* DASHBOARD */
-function goSection(secId){
-  // Reutiliza a navegação do sidebar (inclui o modal de plano se a seção estiver bloqueada).
-  const li = document.querySelector(`#sidebar ul li[data-sec="${secId}"]`);
-  if(li) nav(li);
-}
-
-function refreshDash(){
-  const me = window.ME || {};
-  const s  = window.sessao || [];
-
-  // KPI 1 — Análises na Sessão
-  $('dash-kpi-sessao').textContent = s.length;
-
-  // KPI 2 — PediRato Médio (média dos scores dos jogadores da sessão)
-  const scores = s.map(j=>parseFloat(j.pedirato_score)).filter(v=>!isNaN(v));
-  $('dash-kpi-pedirato').textContent = scores.length
-    ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '—';
-
-  // KPI 3 — Último Jogador adicionado
-  $('dash-kpi-ultimo').textContent = s.length ? s[s.length-1].nome : '—';
-
-  // KPI 4 — Plano Atual
-  $('dash-kpi-plano').textContent = (me.plano || '—').toUpperCase();
-
-  // Cadeado nos cards de frentes bloqueadas pelo tier do usuário
-  const funcoes = me.funcionalidades || [];
-  document.querySelectorAll('#dash-grid .dash-card').forEach(card=>{
-    const req    = card.dataset.req;
-    const lockEl = card.querySelector('.dash-lock');
-    if(req && !funcoes.includes(req)){
-      card.classList.add('locked');
-      const tier = ['gini','ciclo_vida','relatorio_docx'].includes(req) ? 'diretor' : 'olheiro+';
-      if(lockEl) lockEl.textContent = '🔒 ' + tier;
-    } else {
-      card.classList.remove('locked');
-      if(lockEl) lockEl.textContent = '';
-    }
-  });
 }
 
 /* DYNAMIC TABLES */
@@ -1040,7 +653,6 @@ async function doScout(override){
   try {
     const d = await api('GET', url);
     renderScout(out, d, nome);
-    toast('ok', 'Scout: ' + (d.nome||nome));
   } catch(e){
     if(e.status===409&&e.detail?.sugestoes) renderSug(out, e.detail.sugestoes);
     else if(e.status===429) out.innerHTML=`<div class="w">🚫 ${esc(e.detail)}</div>`;
@@ -1121,7 +733,6 @@ async function doHype(){
   spin(out);
   try {
     const d=await api('POST','/v1/analytics/hype-index',{jogadores:js});
-    toast('ok', 'Hype Index calculado');
     const rows=(d.jogadores||[]).map(j=>`<tr>
       <td>${esc(j.nome)}</td><td>€${j.valor_milhoes}M</td>
       <td>${(j.performance||0).toFixed(2)}</td><td>€${(j.valor_predito||0).toFixed(1)}M</td>
@@ -1131,8 +742,7 @@ async function doHype(){
       <div class="twrap"><table class="dt"><thead><tr>
         <th>Jogador</th><th>Valor</th><th>Performance</th><th>Val.Previsto</th><th>Resíduo</th><th>Class.</th>
       </tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="chart-box"><canvas id="chart-hype"></canvas></div></div>`;
-    buildHypeChart('chart-hype', d);
+      ${img(d.grafico_url)}</div>`;
   } catch(e){
     if(e.status===403) err(out,'🔒 Acesso negado. Requer plano OLHEIRO ou superior.');
     else err(out,e.detail||`Erro ${e.status}`);
@@ -1154,7 +764,6 @@ async function doEsp(){
   try {
     const d=await api('POST','/v1/analytics/espelho-pedigree',{
       jogador_ref:{nome:rn,gols:rg,assists:ra,valor_milhoes:rv}, pool});
-    toast('ok', 'Espelho Pedigree calculado');
     const rows=(d.top_3_similares||[]).map((j,i)=>`<tr>
       <td>${i+1}º</td>
       <td>${esc(j.nome)}</td>
@@ -1183,7 +792,6 @@ async function doCiclo(){
   spin(out);
   try {
     const d=await api('POST','/v1/analytics/ciclo-vida',{jogadores:js});
-    toast('ok', 'Ciclo de Vida calculado');
     const rows=(d.tabela||[]).map(j=>`<tr>
       <td>${esc(j.nome)}</td><td>${j.idade}</td>
       <td>€${j.valor_milhoes}M</td><td>€${(j.valor_predito||0).toFixed(1)}M</td>
@@ -1198,9 +806,8 @@ async function doCiclo(){
       <div class="twrap"><table class="dt"><thead><tr>
         <th>Jogador</th><th>Idade</th><th>Val.Real</th><th>Val.Previsto</th><th>Desvio</th>
       </tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="chart-box"><canvas id="chart-ciclo"></canvas></div></div>`;
+      ${img(d.grafico_url)}</div>`;
     if(js.length===3) out.innerHTML+=`<div class="w" style="margin-top:10px">⚠️ Com apenas 3 jogadores o ajuste é exato. Adicione mais para análise significativa.</div>`;
-    buildCicloChart('chart-ciclo', d);   // após o += (que reescreve o innerHTML)
   } catch(e){
     if(e.status===403) err(out,'🔒 Acesso negado. Requer plano DIRETOR.');
     else err(out,e.detail||`Erro ${e.status}`);
@@ -1217,7 +824,6 @@ async function doGini(){
   spin(out);
   try {
     const d=await api('POST','/v1/analytics/gini',{clubes:cs});
-    toast('ok', 'Gini calculado');
     const rows=(d.tabela||[]).map(c=>`<tr>
       <td>${esc(c.clube)}</td><td>€${c.valor_total_elenco_milhoes}M</td>
       <td>${(c['concentracao_acumulada_%']||0).toFixed(1)}%</td></tr>`).join('');
@@ -1235,8 +841,7 @@ async function doGini(){
       <div class="twrap"><table class="dt"><thead><tr>
         <th>Clube</th><th>Valor Elenco</th><th>Conc. Acumulada</th>
       </tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="chart-box"><canvas id="chart-gini"></canvas></div></div>`;
-    buildGiniChart('chart-gini', d);
+      ${img(d.grafico_url)}</div>`;
   } catch(e){
     if(e.status===403) err(out,'🔒 Acesso negado. Requer plano DIRETOR.');
     else err(out,e.detail||`Erro ${e.status}`);
@@ -1268,14 +873,12 @@ async function doDocx(){
   if(dlEl) dlEl.innerHTML='<span class="spinner" style="font-size:.72rem">GERANDO...</span>';
   try {
     const d=await api('POST','/v1/reports/docx',{jogadores:window.sessao});
-    toast('ok', 'Relatório DOCX gerado');
     const link=`<a href="${esc(d.download_url)}" target="_blank" class="btn-p" style="display:inline-block;margin-top:8px;text-decoration:none">⬇ Baixar ${esc(d.filename)}</a>`;
     if(dlEl) dlEl.innerHTML=link;
     if(outEl) outEl.innerHTML=`<div class="i" style="margin-top:10px">Relatório gerado! ${link}</div>`;
   } catch(e){
     const m=`<div class="e">⚠ ${esc(e.detail||'Erro ao gerar.')}</div>`;
     if(dlEl) dlEl.innerHTML=m; if(outEl) outEl.innerHTML=m;
-    toast('err', e.detail||'Erro ao gerar.');
   } finally {
     if(btn) btn.disabled=false; if(btn2) btn2.disabled=false;
   }
@@ -1283,7 +886,6 @@ async function doDocx(){
 
 /* SESSION BAR */
 function updBar(){
-  if($('dash-kpi-sessao')) refreshDash();   // mantém os KPIs do Dashboard em dia
   const bar=$('session-bar'), pe=$('splayers'), db=$('sdocx-btn'), dl=$('sdl');
   if(!window.sessao.length){ bar.classList.remove('visible'); return; }
   bar.classList.add('visible');

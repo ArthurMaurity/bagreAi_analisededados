@@ -12,7 +12,6 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import cosine_similarity
 
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
@@ -335,17 +334,16 @@ def espelho_pedigree(jogador_ref: dict, pool: list) -> pd.DataFrame:
     def _pedirato(j: dict) -> float:
         return (j.get("gols", 0) + j.get("assists", 0)) / max(j.get("valor_milhoes", 0.1), 0.1)
 
-    features = ["gols", "assists", "valor_milhoes"]
+    def _feat_vec(j: dict) -> list:
+        """Vetor de features de performance: gols, assistências, eficiência (PediRato)."""
+        return [float(j.get("gols", 0)), float(j.get("assists", 0)), _pedirato(j)]
 
-    # Matriz: referência na linha 0, pool nas demais
-    todos    = [jogador_ref] + pool
-    matrix   = np.array([[j.get(f, 0) for f in features] for j in todos], dtype=float)
-
-    scaler      = MinMaxScaler()
-    matrix_norm = scaler.fit_transform(matrix)
-
-    ref_vec   = matrix_norm[[0]]
-    pool_vecs = matrix_norm[1:]
+    # Cosseno calculado sobre vetores BRUTOS (sem MinMaxScaler).
+    # O cosseno já é invariante a escala de magnitude — mede direção/proporção.
+    # Aplicar MinMaxScaler colapsava colunas sem variância (min==max → zeros)
+    # quando o pool era pequeno, zerando a similaridade indevidamente.
+    ref_vec   = np.array([_feat_vec(jogador_ref)], dtype=float)
+    pool_vecs = np.array([_feat_vec(j) for j in pool], dtype=float)
     sims      = cosine_similarity(ref_vec, pool_vecs)[0]
 
     limite_valor = jogador_ref["valor_milhoes"] * 0.60
@@ -469,3 +467,15 @@ if __name__ == "__main__":
         {"nome": "Sané",      "gols": 14, "assists": 11, "valor_milhoes": 45},
     ]
     espelho_pedigree(ref, pool_f5)
+
+    # ── Validação do fix de similaridade cosseno (pool pequeno) ──────────────────
+    print("\n" + "#" * 65)
+    print("  TESTE — Mbappé vs João Pedro (pool pequeno, deve ser > 90%)")
+    print("#" * 65)
+    mbappe    = {"nome": "Mbappé",     "gols": 25, "assists": 10, "valor_milhoes": 180}
+    joao_pedro = {"nome": "João Pedro", "gols": 22, "assists": 9,  "valor_milhoes": 45}
+    df_teste  = espelho_pedigree(mbappe, [joao_pedro])
+    sim_jp    = df_teste.loc[df_teste["nome"] == "João Pedro", "similaridade_%"].iloc[0]
+    print(f"\n  Similaridade Mbappé vs João Pedro: {sim_jp}%")
+    assert sim_jp > 90, f"FALHOU: esperado > 90%, obtido {sim_jp}%"
+    print("  ✓ PASSOU: similaridade > 90%")
