@@ -167,9 +167,12 @@ def realizar_scout_processado(nome_jogador, player_id=None, team_id=None):
 
             if val_str:
                 valor_eur = clean_currency(val_str)
-                valor_milhoes = max(valor_eur / 1_000_000, 0.1)
-                fonte = "transfermarkt"
-                print(f"[STEP 2 ✓] Transfermarkt: €{valor_milhoes:.2f}M")
+                if not player_id and valor_eur == 0.0:
+                    print(f"[STEP 2] Descartando resultado do Transfermarkt: valor zerado e jogador não resolvido.")
+                else:
+                    valor_milhoes = max(valor_eur / 1_000_000, 0.1)
+                    fonte = "transfermarkt"
+                    print(f"[STEP 2 ✓] Transfermarkt: €{valor_milhoes:.2f}M")
             else:
                 print("[STEP 2 WARN] Transfermarkt não retornou dados.")
         except Exception as e:

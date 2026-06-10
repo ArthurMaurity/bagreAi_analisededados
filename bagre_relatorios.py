@@ -40,7 +40,22 @@ class GeradorRelatorios:
                 gols = jogador.get("gols", 0)
                 assists = jogador.get("assists", 0)
                 valor = jogador.get("valor_milhoes", 0.0)
-                pedirato = jogador.get("pedirato", 0.0)
+                try:
+                    gols = int(gols) if gols not in (None, '—', '') else 0
+                except: gols = 0
+                try:
+                    assists = int(assists) if assists not in (None, '—', '') else 0
+                except: assists = 0
+                try:
+                    valor = float(valor) if valor not in (None, '—', '') else 0.0
+                except: valor = 0.0
+
+                pedirato = jogador.get("pedirato") or jogador.get("pedirato_score") or jogador.get("score") or 0.0
+                try:
+                    pedirato = float(pedirato) if pedirato not in (None, '—', '') else 0.0
+                except: pedirato = 0.0
+                if pedirato == 0.0 and valor > 0.0:
+                    pedirato = (gols + assists) / valor
                 
                 md_lines.append(f"| **{nome}** | {gols} | {assists} | €{valor}M | **{pedirato:.2f}** |")
                 
@@ -77,9 +92,29 @@ class GeradorRelatorios:
             # Converter para DataFrame
             dados = []
             for j in historico_jogadores:
+                gols = j.get("gols", 0)
+                assists = j.get("assists", 0)
+                valor = j.get("valor_milhoes", 0.0)
+                try:
+                    gols = int(gols) if gols not in (None, '—', '') else 0
+                except: gols = 0
+                try:
+                    assists = int(assists) if assists not in (None, '—', '') else 0
+                except: assists = 0
+                try:
+                    valor = float(valor) if valor not in (None, '—', '') else 0.0
+                except: valor = 0.0
+
+                pedirato = j.get("pedirato") or j.get("pedirato_score") or j.get("score") or 0.0
+                try:
+                    pedirato = float(pedirato) if pedirato not in (None, '—', '') else 0.0
+                except: pedirato = 0.0
+                if pedirato == 0.0 and valor > 0.0:
+                    pedirato = (gols + assists) / valor
+
                 dados.append({
                     "Nome": j.get("nome", "Desconhecido").upper(),
-                    "PediRato": j.get("pedirato", 0.0)
+                    "PediRato": pedirato
                 })
             
             df = pd.DataFrame(dados)
@@ -239,13 +274,33 @@ class GeradorRelatorios:
 
             for j in historico_jogadores:
                 linha = tabela.add_row().cells
-                cls   = _classificar(j.get("pedirato", 0))
+                gols = j.get("gols", 0)
+                assists = j.get("assists", 0)
+                valor = j.get("valor_milhoes", 0.0)
+                try:
+                    gols = int(gols) if gols not in (None, '—', '') else 0
+                except: gols = 0
+                try:
+                    assists = int(assists) if assists not in (None, '—', '') else 0
+                except: assists = 0
+                try:
+                    valor = float(valor) if valor not in (None, '—', '') else 0.0
+                except: valor = 0.0
+
+                pedirato = j.get("pedirato") or j.get("pedirato_score") or j.get("score") or 0.0
+                try:
+                    pedirato = float(pedirato) if pedirato not in (None, '—', '') else 0.0
+                except: pedirato = 0.0
+                if pedirato == 0.0 and valor > 0.0:
+                    pedirato = (gols + assists) / valor
+
+                cls   = _classificar(pedirato)
                 dados = [
                     j.get("nome", "?").upper(),
-                    str(j.get("gols", 0)),
-                    str(j.get("assists", 0)),
-                    f"{j.get('valor_milhoes', 0):.2f}",
-                    f"{j.get('pedirato', 0):.3f}",
+                    str(gols),
+                    str(assists),
+                    f"{valor:.2f}",
+                    f"{pedirato:.3f}",
                     cls,
                 ]
                 cor_cls = {"PEDIGREE": "1A6B1A", "PEDIRATO": "8B0000", "REGULAR": "333333"}
@@ -260,21 +315,70 @@ class GeradorRelatorios:
                             *[int(cor_cls[cls][k:k+2], 16) for k in (0, 2, 4)]
                         )
 
+            # ── GERAÇÃO DINÂMICA DOS GRÁFICOS ────────────────────────────────
+            caminho_comparativo = filename.replace(".docx", "_comparativo.png")
+            caminho_hype = filename.replace(".docx", "_hype.png")
+            caminho_radar = filename.replace(".docx", "_radar.png")
+            caminho_ciclo = filename.replace(".docx", "_ciclo.png")
+
+            # 1. Comparativo
+            GeradorRelatorios.gerar_grafico_comparativo(historico_jogadores, caminho_comparativo)
+
+            # 2. Hype Index (requer mín. 3 jogadores)
+            if len(historico_jogadores) >= 3:
+                try:
+                    from bagre_analytics import analisar_hype_index
+                    df_hype = pd.DataFrame(historico_jogadores)
+                    # Certificar que colunas necessárias existem
+                    if "valor_milhoes" in df_hype.columns and "gols" in df_hype.columns and "assists" in df_hype.columns:
+                        analisar_hype_index(df_hype, img_path=caminho_hype)
+                except Exception as ex:
+                    print(f"Erro ao gerar hype_index dinamico: {ex}")
+
+            # 3. Radar (requer mín. 2 jogadores)
+            if len(historico_jogadores) >= 2:
+                try:
+                    from bagre_analytics import espelho_pedigree
+                    pool_restante = sorted(historico_jogadores, key=lambda x: x.get("valor_milhoes", 0), reverse=True)
+                    jogador_ref = pool_restante[0]
+                    pool = pool_restante[1:]
+                    espelho_pedigree(jogador_ref, pool, img_path=caminho_radar)
+                except Exception as ex:
+                    print(f"Erro ao gerar radar dinamico: {ex}")
+
+            # 4. Ciclo de vida (requer mín. 3 jogadores com idades válidas e distintas)
+            try:
+                from bagre_analytics import analisar_ciclo_de_vida
+                jogadores_com_idade = []
+                for j in historico_jogadores:
+                    idade = j.get("idade")
+                    # Se idade for string de número ou int, inclui
+                    if idade is not None and str(idade).isdigit():
+                        j_copy = dict(j)
+                        j_copy["idade"] = int(idade)
+                        jogadores_com_idade.append(j_copy)
+                
+                if len(jogadores_com_idade) >= 3:
+                    df_ciclo = pd.DataFrame(jogadores_com_idade)
+                    if df_ciclo["idade"].nunique() >= 2:
+                        analisar_ciclo_de_vida(df_ciclo, img_path=caminho_ciclo)
+            except Exception as ex:
+                print(f"Erro ao gerar ciclo_vida dinamico: {ex}")
+
             # ── 4. GRÁFICOS ANALÍTICOS ─────────────────────────────────────────
             doc.add_page_break()
             doc.add_heading("3. Graficos Analiticos", level=1)
 
-            graficos = [
-                ("comparativo_pedirato.png", "Grafico 1: Comparativo de Eficiencia (Indice PediRato)"),
-                ("hype_index.png",           "Grafico 2: Hype Index - Regressao Linear"),
-                ("radar_pedigree.png",       "Grafico 3: Espelho Pedigree - Grafico Radar"),
-                ("ciclo_vida.png",           "Grafico 4: Curva de Ciclo de Vida por Idade"),
+            graficos_dinamicos = [
+                (caminho_comparativo, "Grafico 1: Comparativo de Eficiencia (Indice PediRato)"),
+                (caminho_hype,        "Grafico 2: Hype Index - Regressao Linear"),
+                (caminho_radar,       "Grafico 3: Espelho Pedigree - Grafico Radar"),
+                (caminho_ciclo,       "Grafico 4: Curva de Ciclo de Vida por Idade"),
             ]
 
             inseriu = False
-            for nome_arq, legenda in graficos:
-                caminho = os.path.join(STATIC_DIR, nome_arq)
-                if os.path.exists(caminho):
+            for caminho_img, legenda in graficos_dinamicos:
+                if os.path.exists(caminho_img):
                     p_leg = doc.add_paragraph()
                     p_leg.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     run = p_leg.add_run(legenda)
@@ -284,16 +388,17 @@ class GeradorRelatorios:
                         p_img = doc.add_paragraph()
                         p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
                         run_img = p_img.add_run()
-                        run_img.add_picture(caminho, width=Inches(5.8))
-                    except Exception:
+                        run_img.add_picture(caminho_img, width=Inches(5.8))
+                    except Exception as ex:
+                        print(f"Erro ao adicionar imagem ao docx: {ex}")
                         p_img.clear()
-                        p_img.add_run(f"[Imagem indisponivel: {nome_arq}]")
+                        p_img.add_run(f"[Imagem indisponivel]")
                     doc.add_paragraph()
                     inseriu = True
 
             if not inseriu:
                 doc.add_paragraph(
-                    "Nenhum grafico disponivel. Execute as analises (opcoes 2-6) para gerar os graficos."
+                    "Nenhum grafico disponivel."
                 )
 
             # ── 5. METODOLOGIA ─────────────────────────────────────────────────
@@ -330,6 +435,15 @@ class GeradorRelatorios:
                 os.makedirs(dir_nome, exist_ok=True)
 
             doc.save(filename)
+
+            # Limpar arquivos de imagens temporários
+            for caminho_img, _ in graficos_dinamicos:
+                if os.path.exists(caminho_img):
+                    try:
+                        os.remove(caminho_img)
+                    except Exception:
+                        pass
+
             print(f"Relatorio Word salvo: {filename}")
             return filename
 

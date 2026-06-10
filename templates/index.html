@@ -685,9 +685,10 @@ table.dt td.gl-nome { font-weight: 700; letter-spacing: .5px; }
         <div class="card bagre-card">
           <div class="ctitle">Jogador Referencial</div>
           <div class="frow">
-            <div class="fg" style="flex:2">
+            <div class="fg" style="flex:2; position:relative;">
               <label>Nome *</label>
-              <input id="ref-nome" class="bagre-input" type="text" placeholder="ex: Kylian Mbappe">
+              <input id="ref-nome" class="bagre-input" type="text" placeholder="ex: Kylian Mbappe" autocomplete="off">
+              <div id="ref-autocomplete" class="ac-dropdown" style="display:none;"></div>
             </div>
           </div>
         </div>
@@ -1171,17 +1172,77 @@ const IDADES = {
 function addNameRow(listId, prefill){
   const div=$(listId);
   const row=document.createElement('div');
-  row.style.cssText='display:flex;gap:6px;margin-bottom:6px;align-items:center';
+  row.style.cssText='display:flex;gap:6px;margin-bottom:6px;align-items:center;width:100%;';
+  
+  const container = document.createElement('div');
+  container.style.cssText = 'position:relative;flex:1;';
+
   const inp=document.createElement('input');
   inp.type='text'; inp.className='bagre-input name-inp';
-  inp.placeholder='Nome do jogador'; inp.style.flex='1';
+  inp.placeholder='Nome do jogador'; inp.style.width='100%'; inp.setAttribute('autocomplete', 'off');
   if(prefill) inp.value=prefill;
+
+  const ac = document.createElement('div');
+  ac.className = 'ac-dropdown';
+  ac.style.display = 'none';
+
+  container.appendChild(inp);
+  container.appendChild(ac);
+
   const btn=document.createElement('button');
   btn.className='btn-rm'; btn.textContent='✕';
   btn.onclick=()=>row.remove();
-  row.appendChild(inp); row.appendChild(btn);
+  
+  row.appendChild(container); row.appendChild(btn);
   div.appendChild(row);
+
+  registrarAutocompleteDinamico(inp, ac);
+
   return inp;
+}
+
+function registrarAutocompleteDinamico(inp, ac) {
+  let debounceTimer = null;
+  inp.addEventListener('input', e => {
+    clearTimeout(debounceTimer);
+    const q = e.target.value.trim();
+    if (q.length < 2) {
+      ac.innerHTML = '';
+      ac.style.display = 'none';
+      return;
+    }
+    debounceTimer = setTimeout(async () => {
+      try {
+        const d = await api('GET', `/v1/search?query=${encodeURIComponent(q)}`);
+        const sugs = d.response?.suggestions || [];
+        if (!sugs.length) {
+          ac.innerHTML = '';
+          ac.style.display = 'none';
+          return;
+        }
+        ac.innerHTML = sugs.map(s => {
+          const club = s.teamName ? s.teamName : '';
+          const label = club ? `<span class="ac-team">${esc(club)}</span>` : '';
+          const nameEsc = encodeURIComponent(s.name);
+          return `
+            <div class="ac-item" onclick="this.parentElement.style.display='none'; this.parentElement.previousElementSibling.value=decodeURIComponent('${nameEsc}');">
+              <span>${esc(s.name)}</span>
+              ${label}
+            </div>
+          `;
+        }).join('');
+        ac.style.display = 'block';
+      } catch (err) {
+        console.error("Dynamic autocomplete error:", err);
+      }
+    }, 250);
+  });
+
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      setTimeout(() => { ac.innerHTML = ''; ac.style.display = 'none'; }, 150);
+    }
+  });
 }
 
 function readNames(listId){
@@ -1264,9 +1325,77 @@ function hideAutocomplete() {
 }
 
 // Hide dropdown when clicking outside
+let refDebounceTimer = null;
+
+$('ref-nome').addEventListener('input', e => {
+  clearTimeout(refDebounceTimer);
+  const q = e.target.value.trim();
+  if (q.length < 2) {
+    hideRefAutocomplete();
+    return;
+  }
+  refDebounceTimer = setTimeout(async () => {
+    try {
+      const d = await api('GET', `/v1/search?query=${encodeURIComponent(q)}`);
+      const sugs = d.response?.suggestions || [];
+      showRefAutocomplete(sugs);
+    } catch (err) {
+      console.error("Autocomplete error:", err);
+    }
+  }, 250);
+});
+
+$('ref-nome').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    setTimeout(hideRefAutocomplete, 150);
+  }
+});
+
+function showRefAutocomplete(sugs) {
+  const ac = $('ref-autocomplete');
+  if (!sugs.length) {
+    hideRefAutocomplete();
+    return;
+  }
+  ac.innerHTML = sugs.map(s => {
+    const club = s.teamName ? s.teamName : '';
+    const label = club ? `<span class="ac-team">${esc(club)}</span>` : '';
+    const nameEsc = encodeURIComponent(s.name);
+    return `
+      <div class="ac-item" onclick="selectRefAutocomplete(decodeURIComponent('${nameEsc}'))">
+        <span>${esc(s.name)}</span>
+        ${label}
+      </div>
+    `;
+  }).join('');
+  ac.style.display = 'block';
+}
+
+function selectRefAutocomplete(name) {
+  $('ref-nome').value = name;
+  hideRefAutocomplete();
+}
+
+function hideRefAutocomplete() {
+  const ac = $('ref-autocomplete');
+  if (ac) {
+    ac.innerHTML = '';
+    ac.style.display = 'none';
+  }
+}
+
 document.addEventListener('click', e => {
   if (e.target.id !== 'sc-nome' && e.target.id !== 'sc-autocomplete') {
     hideAutocomplete();
+  }
+  if (e.target.id !== 'ref-nome' && e.target.id !== 'ref-autocomplete') {
+    hideRefAutocomplete();
+  }
+  if (!e.target.classList.contains('name-inp') && !e.target.classList.contains('ac-item')) {
+    document.querySelectorAll('.ac-dropdown').forEach(el => {
+      el.innerHTML = '';
+      el.style.display = 'none';
+    });
   }
 });
 

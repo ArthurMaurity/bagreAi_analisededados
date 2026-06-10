@@ -51,7 +51,7 @@ LIMITACOES_PEDIRATO = [
 # ===============================================================================
 # FRENTE 2 — CICLO DE VIDA E CURVA DE VALOR
 # ===============================================================================
-def analisar_ciclo_de_vida(df: pd.DataFrame) -> dict:
+def analisar_ciclo_de_vida(df: pd.DataFrame, img_path: str = None) -> dict:
     """
     Regressão polinomial grau 2 (Idade × Valor de Mercado).
     Calcula pico de valor e janela ideal de revenda (>80% do pico).
@@ -103,7 +103,8 @@ def analisar_ciclo_de_vida(df: pd.DataFrame) -> dict:
     print("=" * 58)
 
     # ── Gráfico ────────────────────────────────────────────────────────────────
-    img_path = os.path.join(STATIC_DIR, "ciclo_vida.png")
+    if not img_path:
+        img_path = os.path.join(STATIC_DIR, "ciclo_vida.png")
     fig, ax = plt.subplots(figsize=(11, 6))
     _cyberpunk_ax(ax, fig)
 
@@ -145,7 +146,7 @@ def analisar_ciclo_de_vida(df: pd.DataFrame) -> dict:
 # FRENTE 4 — HYPE INDEX (DETECÇÃO DE PEDIRATO)
 # Regressão linear simples — conforme metodologia da seção 4.2 do artigo
 # ===============================================================================
-def analisar_hype_index(df: pd.DataFrame) -> pd.DataFrame:
+def analisar_hype_index(df: pd.DataFrame, img_path: str = None) -> pd.DataFrame:
     """
     Regressão linear (sklearn): X = performance, y = valor_milhoes.
     Classifica por resíduo: PediRato (>+1σ), Pedigree (<-1σ), Regular.
@@ -199,7 +200,8 @@ def analisar_hype_index(df: pd.DataFrame) -> pd.DataFrame:
     print("=" * 65)
 
     # ── Gráfico (seaborn scatter + matplotlib reta) ────────────────────────────
-    img_path = os.path.join(STATIC_DIR, "hype_index.png")
+    if not img_path:
+        img_path = os.path.join(STATIC_DIR, "hype_index.png")
     cores_map = {"PediRato": RED, "Pedigree": GREEN, "Regular": GRAY}
 
     plt.style.use("dark_background")
@@ -249,7 +251,7 @@ def analisar_hype_index(df: pd.DataFrame) -> pd.DataFrame:
 # FRENTE 5 — ESPELHO PEDIGREE (SIMILARIDADE COSSENO + RADAR)
 # Distância cosseno normalizada — conforme metodologia da seção 4.3 do artigo
 # ===============================================================================
-def espelho_pedigree(jogador_ref: dict, pool: list) -> pd.DataFrame:
+def espelho_pedigree(jogador_ref: dict, pool: list, img_path: str = None) -> pd.DataFrame:
     """
     Similaridade cosseno (sklearn) entre o jogador de referência e o pool.
     Filtra candidatos com valor < 60% do referencial e retorna top 3.
@@ -310,7 +312,8 @@ def espelho_pedigree(jogador_ref: dict, pool: list) -> pd.DataFrame:
     print("=" * 65)
 
     # ── Radar Chart ────────────────────────────────────────────────────────────
-    img_path   = os.path.join(STATIC_DIR, "radar_pedigree.png")
+    if not img_path:
+        img_path   = os.path.join(STATIC_DIR, "radar_pedigree.png")
     eixos      = ["Gols", "Assistências", "Eficiência\n(PediRato)", "Valor\n(invertido)"]
     n_eixos    = len(eixos)
     angles     = np.linspace(0, 2 * np.pi, n_eixos, endpoint=False).tolist()
