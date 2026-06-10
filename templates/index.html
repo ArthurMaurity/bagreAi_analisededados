@@ -19,7 +19,7 @@
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="lcard">
-    <div class="llogo"><i data-lucide="zap" style="width:18px;height:18px;display:inline-block;vertical-align:-3px;margin-right:4px;"></i>BAGRE.AI</div>
+    <div class="llogo"><img src="/static/img/logo.png" alt="BAGRE.AI Logo" style="width: 100%; max-width: 280px; height: auto; display: block; margin: 0 auto 15px; object-fit: contain; mix-blend-mode: screen;"></div>
     <div class="lsub">Inteligência de Mercado no Futebol</div>
     <label class="llbl" for="apikey-input">Sua API Key</label>
     <input id="apikey-input" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -33,7 +33,7 @@
 <div id="app">
 
   <div id="header">
-    <span id="hdr-logo"><i data-lucide="zap" style="width:18px;height:18px;display:inline-block;vertical-align:-3px;margin-right:4px;"></i>BAGRE.AI</span>
+    <span id="hdr-logo" style="display: flex; align-items: center;"><img src="/static/img/logo.png" alt="BAGRE.AI Logo" style="height: 95px; width: auto; object-fit: contain; margin-top: -20px; margin-bottom: -20px; margin-right: 15px; mix-blend-mode: screen;"></span>
     <span id="hdr-sp"></span>
     <span id="hdr-uso"></span>
     <span id="hdr-plano"></span>
@@ -123,7 +123,7 @@
         <div id="dash-grid" class="dash-grid">
 
           <div class="dash-card bagre-card" data-sec="s-scout" data-req="scout">
-            <div class="dash-ic">🔍</div>
+            <div class="dash-ic"><i data-lucide="search" style="width:32px;height:32px;color:var(--green)"></i></div>
             <div class="dash-t">Scout de Jogador</div>
             <div class="dash-d">Busca e calcula o Índice PediRato via API externa com cache de 24h.</div>
             <div class="dash-foot">
@@ -133,7 +133,7 @@
           </div>
 
           <div class="dash-card bagre-card" data-sec="s-hype" data-req="hype_index">
-            <div class="dash-ic">📈</div>
+            <div class="dash-ic"><i data-lucide="trending-up" style="width:32px;height:32px;color:var(--green)"></i></div>
             <div class="dash-t">Hype Index</div>
             <div class="dash-d">Regressão linear Performance × Valor para detectar PediRatos.</div>
             <div class="dash-foot">
@@ -143,7 +143,7 @@
           </div>
 
           <div class="dash-card bagre-card" data-sec="s-esp" data-req="espelho_pedigree">
-            <div class="dash-ic">🎯</div>
+            <div class="dash-ic"><i data-lucide="target" style="width:32px;height:32px;color:var(--green)"></i></div>
             <div class="dash-t">Espelho Pedigree</div>
             <div class="dash-d">Similaridade cosseno — encontra os 3 mais parecidos com valor &lt;60%.</div>
             <div class="dash-foot">
@@ -153,7 +153,7 @@
           </div>
 
           <div class="dash-card bagre-card" data-sec="s-ciclo" data-req="ciclo_vida">
-            <div class="dash-ic">📉</div>
+            <div class="dash-ic"><i data-lucide="activity" style="width:32px;height:32px;color:var(--green)"></i></div>
             <div class="dash-t">Ciclo de Vida</div>
             <div class="dash-d">Regressão polinomial Idade × Valor: estima pico e janela de revenda.</div>
             <div class="dash-foot">
@@ -163,7 +163,7 @@
           </div>
 
           <div class="dash-card bagre-card" data-sec="s-docx" data-req="relatorio_docx">
-            <div class="dash-ic">📄</div>
+            <div class="dash-ic"><i data-lucide="file-text" style="width:32px;height:32px;color:var(--green)"></i></div>
             <div class="dash-t">Relatório DOCX</div>
             <div class="dash-d">Gera relatório Word completo com tabela, gráficos e metodologia.</div>
             <div class="dash-foot">
@@ -173,7 +173,7 @@
           </div>
 
           <div class="dash-card bagre-card" data-sec="s-golden" data-req="golden_list">
-            <div class="dash-ic">🏆</div>
+            <div class="dash-ic"><i data-lucide="award" style="width:32px;height:32px;color:var(--green)"></i></div>
             <div class="dash-t">Golden List</div>
             <div class="dash-d">Ranking dos melhores Pedigrees — oportunidades subvalorizadas.</div>
             <div class="dash-foot">

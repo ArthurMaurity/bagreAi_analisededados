@@ -7,7 +7,7 @@
   --green:    #39FF14;
   --red:      #FF3131;
   --white:    #FFFFFF;
-  --muted:    #888888;
+  --muted:    #D1D1D1;
   /* Bordas / brilho (derivados das cores acima) */
   --border:   1px solid var(--green);
   --glow:     0 0 8px var(--green), 0 0 20px var(--green);
@@ -27,7 +27,7 @@
   --sp-xl:    22px;
   /* Dimensões de layout */
   --sw:       220px;
-  --hh:       56px;
+  --hh:       75px;
   --sbh:      62px;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,7 +48,11 @@ button { cursor: pointer; }
 }
 #login-screen.hidden { display: none; }
 .lcard {
-  background: var(--panel); border: var(--border); border-radius: 8px;
+  background-color: var(--panel);
+  background-image: 
+    repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,.3) 2px, rgba(0,0,0,.3) 4px),
+    repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(0,0,0,.3) 2px, rgba(0,0,0,.3) 4px);
+  border: var(--border); border-radius: 8px;
   padding: 48px 40px; width: 420px; text-align: center; box-shadow: var(--glow);
 }
 .llogo { font-size: 2.8rem; font-weight: 700; letter-spacing: 4px;
