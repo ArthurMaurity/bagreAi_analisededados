@@ -27,15 +27,29 @@ GRAY  = "#888888"
 DARK  = "#1A1A1A"
 
 
+def _apply_theme_ax(ax, fig, light_theme=False):
+    """Aplica o tema (cyberpunk/dark ou corporativo/light) a um eixo matplotlib."""
+    if light_theme:
+        fig.patch.set_facecolor('#FFFFFF')
+        ax.set_facecolor('#F8F9FA')
+        ax.tick_params(colors='#333333')
+        ax.xaxis.label.set_color('#333333')
+        ax.yaxis.label.set_color('#333333')
+        for spine in ax.spines.values():
+            spine.set_edgecolor('#DDDDDD')
+    else:
+        fig.patch.set_facecolor(BG)
+        ax.set_facecolor(BG)
+        ax.tick_params(colors=WHITE)
+        ax.xaxis.label.set_color(WHITE)
+        ax.yaxis.label.set_color(WHITE)
+        for spine in ax.spines.values():
+            spine.set_edgecolor(GRAY)
+
+
 def _cyberpunk_ax(ax, fig):
-    """Aplica estilo cyberpunk a um eixo matplotlib convencional."""
-    ax.set_facecolor(BG)
-    fig.patch.set_facecolor(BG)
-    ax.tick_params(colors=WHITE)
-    ax.xaxis.label.set_color(WHITE)
-    ax.yaxis.label.set_color(WHITE)
-    for spine in ax.spines.values():
-        spine.set_edgecolor(GRAY)
+    """Mantido para compatibilidade retrospectiva."""
+    _apply_theme_ax(ax, fig, light_theme=False)
 
 
 # Limitações metodológicas do Índice PediRato — seção 5.2 do artigo
@@ -51,7 +65,7 @@ LIMITACOES_PEDIRATO = [
 # ===============================================================================
 # FRENTE 2 — CICLO DE VIDA E CURVA DE VALOR
 # ===============================================================================
-def analisar_ciclo_de_vida(df: pd.DataFrame, img_path: str = None) -> dict:
+def analisar_ciclo_de_vida(df: pd.DataFrame, img_path: str = None, light_theme: bool = False) -> dict:
     """
     Regressão polinomial grau 2 (Idade × Valor de Mercado).
     Calcula pico de valor e janela ideal de revenda (>80% do pico).
@@ -105,31 +119,51 @@ def analisar_ciclo_de_vida(df: pd.DataFrame, img_path: str = None) -> dict:
     # ── Gráfico ────────────────────────────────────────────────────────────────
     if not img_path:
         img_path = os.path.join(STATIC_DIR, "ciclo_vida.png")
+    
+    if light_theme:
+        plt.style.use('default')
+        c_bg = "#FFFFFF"
+        c_green = "#1E7E34"
+        c_line = "#0056B3"
+        c_red = "#DC3545"
+        c_text = "#333333"
+        c_legend_bg = "#FFFFFF"
+        c_legend_edge = "#DDDDDD"
+    else:
+        plt.style.use('dark_background')
+        c_bg = BG
+        c_green = GREEN
+        c_line = WHITE
+        c_red = RED
+        c_text = WHITE
+        c_legend_bg = DARK
+        c_legend_edge = GRAY
+
     fig, ax = plt.subplots(figsize=(11, 6))
-    _cyberpunk_ax(ax, fig)
+    _apply_theme_ax(ax, fig, light_theme=light_theme)
 
     y_max = max(float(y.max()), float(y_range.max())) * 1.15
     ax.set_ylim(bottom=0, top=y_max)
 
     if mascara.any():
-        ax.axhspan(limiar, y_max, alpha=0.06, color=GREEN, label="Janela de revenda (>80% pico)")
+        ax.axhspan(limiar, y_max, alpha=0.06, color=c_green, label="Janela de revenda (>80% pico)")
 
-    ax.scatter(x, y, color=GREEN, s=110, zorder=5, label="Jogadores (real)")
-    ax.plot(x_range, y_range, color=WHITE, linewidth=2, label="Curva polinomial (grau 2)")
-    ax.axvline(idade_pico, color=RED, linestyle=":", linewidth=1.5,
+    ax.scatter(x, y, color=c_green, s=110, zorder=5, label="Jogadores (real)")
+    ax.plot(x_range, y_range, color=c_line, linewidth=2, label="Curva polinomial (grau 2)")
+    ax.axvline(idade_pico, color=c_red, linestyle=":", linewidth=1.5,
                label=f"Pico estimado: {idade_pico:.1f} anos")
 
     for _, row in df.iterrows():
         ax.annotate(row["nome"], (row["idade"], row["valor_milhoes"]),
-                    textcoords="offset points", xytext=(6, 5), fontsize=8, color=WHITE)
+                    textcoords="offset points", xytext=(6, 5), fontsize=8, color=c_text)
 
-    ax.set_xlabel("Idade", fontsize=11)
-    ax.set_ylabel("Valor de Mercado (€M)", fontsize=11)
+    ax.set_xlabel("Idade", fontsize=11, color=c_text)
+    ax.set_ylabel("Valor de Mercado (€M)", fontsize=11, color=c_text)
     ax.set_title("Ciclo de Vida — Curva de Valor por Idade  |  Bagre.ai",
-                 color=GREEN, fontsize=13, pad=12)
-    ax.legend(labelcolor=WHITE, facecolor=DARK, edgecolor=GRAY, fontsize=9)
+                 color=c_green, fontsize=13, pad=12)
+    ax.legend(labelcolor=c_text, facecolor=c_legend_bg, edgecolor=c_legend_edge, fontsize=9)
     plt.tight_layout()
-    plt.savefig(img_path, dpi=150, facecolor=BG)
+    plt.savefig(img_path, dpi=150, facecolor=c_bg)
     plt.close()
     print(f"  Gráfico salvo: {img_path}\n")
 
@@ -146,7 +180,7 @@ def analisar_ciclo_de_vida(df: pd.DataFrame, img_path: str = None) -> dict:
 # FRENTE 4 — HYPE INDEX (DETECÇÃO DE PEDIRATO)
 # Regressão linear simples — conforme metodologia da seção 4.2 do artigo
 # ===============================================================================
-def analisar_hype_index(df: pd.DataFrame, img_path: str = None) -> pd.DataFrame:
+def analisar_hype_index(df: pd.DataFrame, img_path: str = None, light_theme: bool = False) -> pd.DataFrame:
     """
     Regressão linear (sklearn): X = performance, y = valor_milhoes.
     Classifica por resíduo: PediRato (>+1σ), Pedigree (<-1σ), Regular.
@@ -202,12 +236,32 @@ def analisar_hype_index(df: pd.DataFrame, img_path: str = None) -> pd.DataFrame:
     # ── Gráfico (seaborn scatter + matplotlib reta) ────────────────────────────
     if not img_path:
         img_path = os.path.join(STATIC_DIR, "hype_index.png")
-    cores_map = {"PediRato": RED, "Pedigree": GREEN, "Regular": GRAY}
+    
+    if light_theme:
+        plt.style.use('default')
+        c_bg = "#FFFFFF"
+        c_text = "#333333"
+        c_green = "#1E7E34"
+        c_red = "#DC3545"
+        c_gray = "#6C757D"
+        c_line = "#0056B3"
+        c_legend_bg = "#FFFFFF"
+        c_legend_edge = "#DDDDDD"
+    else:
+        plt.style.use("dark_background")
+        c_bg = BG
+        c_text = WHITE
+        c_green = GREEN
+        c_red = RED
+        c_gray = GRAY
+        c_line = WHITE
+        c_legend_bg = DARK
+        c_legend_edge = GRAY
 
-    plt.style.use("dark_background")
+    cores_map = {"PediRato": c_red, "Pedigree": c_green, "Regular": c_gray}
+
     fig, ax = plt.subplots(figsize=(11, 7))
-    fig.patch.set_facecolor(BG)
-    ax.set_facecolor(BG)
+    _apply_theme_ax(ax, fig, light_theme=light_theme)
 
     # seaborn scatterplot com hue
     sns.scatterplot(
@@ -216,12 +270,11 @@ def analisar_hype_index(df: pd.DataFrame, img_path: str = None) -> pd.DataFrame:
         s=130, zorder=5, ax=ax, legend=False,
     )
     # seaborn pode redefinir facecolors — reaplicar após o plot
-    ax.set_facecolor(BG)
-    fig.patch.set_facecolor(BG)
+    _apply_theme_ax(ax, fig, light_theme=light_theme)
 
     # Reta de regressão via matplotlib
     x_line = np.linspace(df["performance"].min(), df["performance"].max(), 300)
-    ax.plot(x_line, slope * x_line + inter, color=WHITE, linewidth=2,
+    ax.plot(x_line, slope * x_line + inter, color=c_line, linewidth=2,
             label=f"Regressão  (R²={r2:.3f})")
 
     # Pontos de legenda manual
@@ -231,16 +284,16 @@ def analisar_hype_index(df: pd.DataFrame, img_path: str = None) -> pd.DataFrame:
     # Anotações com nome
     for _, row in df.iterrows():
         ax.annotate(row["nome"], (row["performance"], row["valor_milhoes"]),
-                    textcoords="offset points", xytext=(6, 4), fontsize=8, color=WHITE)
+                    textcoords="offset points", xytext=(6, 4), fontsize=8, color=c_text)
 
-    ax.set_xlabel("Performance (Gols + Assists)", fontsize=11, color=WHITE)
-    ax.set_ylabel("Valor de Mercado (€M)", fontsize=11, color=WHITE)
+    ax.set_xlabel("Performance (Gols + Assists)", fontsize=11, color=c_text)
+    ax.set_ylabel("Valor de Mercado (€M)", fontsize=11, color=c_text)
     ax.set_title(f"Hype Index — PediRatos vs Pedigrees  |  Bagre.ai",
-                 color=GREEN, fontsize=13, pad=12)
-    ax.tick_params(colors=WHITE)
-    ax.legend(labelcolor=WHITE, facecolor=DARK, edgecolor=GRAY, fontsize=9)
+                 color=c_green, fontsize=13, pad=12)
+    ax.tick_params(colors=c_text)
+    ax.legend(labelcolor=c_text, facecolor=c_legend_bg, edgecolor=c_legend_edge, fontsize=9)
     plt.tight_layout()
-    plt.savefig(img_path, dpi=150, facecolor=BG)
+    plt.savefig(img_path, dpi=150, facecolor=c_bg)
     plt.close()
     print(f"  Gráfico salvo: {img_path}\n")
 
@@ -251,7 +304,7 @@ def analisar_hype_index(df: pd.DataFrame, img_path: str = None) -> pd.DataFrame:
 # FRENTE 5 — ESPELHO PEDIGREE (SIMILARIDADE COSSENO + RADAR)
 # Distância cosseno normalizada — conforme metodologia da seção 4.3 do artigo
 # ===============================================================================
-def espelho_pedigree(jogador_ref: dict, pool: list, img_path: str = None) -> pd.DataFrame:
+def espelho_pedigree(jogador_ref: dict, pool: list, img_path: str = None, light_theme: bool = False) -> pd.DataFrame:
     """
     Similaridade cosseno (sklearn) entre o jogador de referência e o pool.
     Filtra candidatos com valor < 60% do referencial e retorna top 3.
@@ -333,13 +386,31 @@ def espelho_pedigree(jogador_ref: dict, pool: list, img_path: str = None) -> pd.
     raw_norm = raw / max_v
 
     # Referência em vermelho, top3 em tons de verde
-    cores_radar = [RED, GREEN, "#00CC10", "#009900"]
+    if light_theme:
+        plt.style.use('default')
+        c_bg = "#FFFFFF"
+        c_text = "#333333"
+        c_green = "#1E7E34"
+        c_legend_bg = "#FFFFFF"
+        c_legend_edge = "#DDDDDD"
+        c_spine = "#DDDDDD"
+        cores_radar = ["#DC3545", "#28A745", "#218838", "#1E7E34"]
+    else:
+        plt.style.use('dark_background')
+        c_bg = BG
+        c_text = WHITE
+        c_green = GREEN
+        c_legend_bg = DARK
+        c_legend_edge = GRAY
+        c_spine = GRAY
+        cores_radar = [RED, GREEN, "#00CC10", "#009900"]
 
     fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
-    ax.set_facecolor(BG)
-    fig.patch.set_facecolor(BG)
-    ax.tick_params(colors=WHITE)
-    ax.spines["polar"].set_color(GRAY)
+    ax.set_facecolor(c_bg)
+    fig.patch.set_facecolor(c_bg)
+    ax.tick_params(colors=c_text)
+    ax.spines["polar"].set_color(c_spine)
+    ax.grid(True, color=c_spine, linestyle="--", alpha=0.5)
 
     for idx, jog in enumerate(jogadores_radar):
         vals = raw_norm[idx].tolist() + [raw_norm[idx][0]]  # fechar
@@ -348,15 +419,15 @@ def espelho_pedigree(jogador_ref: dict, pool: list, img_path: str = None) -> pd.
         ax.fill(angles, vals, color=cor, alpha=0.15)
 
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(eixos, color=WHITE, fontsize=10)
+    ax.set_xticklabels(eixos, color=c_text, fontsize=10)
     ax.set_yticklabels([])
     ax.set_title(f"Espelho Pedigree — {jogador_ref['nome']}  |  Bagre.ai",
-                 color=GREEN, fontsize=13, pad=25)
+                 color=c_green, fontsize=13, pad=25)
     ax.legend(loc="upper right", bbox_to_anchor=(1.42, 1.15),
-              labelcolor=WHITE, facecolor=DARK, edgecolor=GRAY, fontsize=9)
+              labelcolor=c_text, facecolor=c_legend_bg, edgecolor=c_legend_edge, fontsize=9)
 
     plt.tight_layout()
-    plt.savefig(img_path, dpi=150, facecolor=BG, bbox_inches="tight")
+    plt.savefig(img_path, dpi=150, facecolor=c_bg, bbox_inches="tight")
     plt.close()
     print(f"  Gráfico Radar salvo: {img_path}\n")
 

@@ -74,7 +74,7 @@ class GeradorRelatorios:
             return None
 
     @staticmethod
-    def gerar_grafico_comparativo(historico_jogadores, filename="comparativo_pedirato.png"):
+    def gerar_grafico_comparativo(historico_jogadores, filename="comparativo_pedirato.png", light_theme=False):
         """
         Gera um gráfico de barras comparando o Índice PediRato dos jogadores da sessão.
         Retorna o caminho do arquivo gerado ou None se houver erro.
@@ -121,22 +121,46 @@ class GeradorRelatorios:
             # Ordenar por PediRato decrescente
             df = df.sort_values(by="PediRato", ascending=False)
             
-            # Configurar o estilo do Seaborn para uma estética premium
-            sns.set_theme(style="darkgrid")
-            plt.figure(figsize=(10, 6))
+            # Configurar o estilo do matplotlib para fundo/tema consistente
+            if light_theme:
+                plt.style.use('default')
+                fig, ax = plt.subplots(figsize=(10, 6))
+                fig.patch.set_facecolor('#FFFFFF')
+                ax.set_facecolor('#F8F9FA')
+                text_color = '#333333'
+                title_color = '#1A6B1A'
+                save_bg = '#FFFFFF'
+            else:
+                plt.style.use('dark_background')
+                fig, ax = plt.subplots(figsize=(10, 6))
+                fig.patch.set_facecolor('#000000')
+                ax.set_facecolor('#1A1A1A')
+                text_color = '#FFFFFF'
+                title_color = '#39FF14'
+                save_bg = '#000000'
             
             # Paleta de cores moderna (degradê)
             colors = sns.color_palette("viridis", len(df))
             
             # Criar gráfico de barras
-            ax = sns.barplot(
+            sns.barplot(
                 x="PediRato", 
                 y="Nome", 
                 data=df, 
                 palette=colors,
                 hue="Nome",
-                legend=False
+                legend=False,
+                ax=ax
             )
+            
+            # Configurar cores de eixos, títulos e textos
+            ax.tick_params(colors=text_color, labelsize=10)
+            ax.xaxis.label.set_color(text_color)
+            ax.yaxis.label.set_color(text_color)
+            
+            if light_theme:
+                for spine in ax.spines.values():
+                    spine.set_edgecolor('#DDDDDD')
             
             # Adicionar rótulos de dados nas barras
             for i, p in enumerate(ax.patches):
@@ -147,15 +171,16 @@ class GeradorRelatorios:
                     f"{width:.2f}", 
                     ha="left", 
                     va="center",
-                    fontweight="bold"
+                    fontweight="bold",
+                    color=text_color
                 )
                 
-            plt.title("Comparação de Eficiência - Índice PediRato", fontsize=16, fontweight="bold", pad=15)
-            plt.xlabel("Índice PediRato (Eficiência)", fontsize=12, fontweight="bold")
-            plt.ylabel("Atleta", fontsize=12, fontweight="bold")
+            plt.title("Comparacao de Eficiencia - Indice PediRato", fontsize=15, fontweight="bold", pad=15, color=title_color)
+            plt.xlabel("Indice PediRato (Eficiencia)", fontsize=11, fontweight="bold", color=text_color)
+            plt.ylabel("Atleta", fontsize=11, fontweight="bold", color=text_color)
             
             plt.tight_layout()
-            plt.savefig(filename, dpi=300)
+            plt.savefig(filename, dpi=300, facecolor=save_bg)
             plt.close()
             
             print(f"Gráfico de comparação salvo com sucesso em: {filename}")
@@ -165,7 +190,7 @@ class GeradorRelatorios:
             return None
 
     @staticmethod
-    def gerar_relatorio_completo_docx(historico_jogadores, resultados_analytics=None, filename="relatorio_bagre_completo.docx"):
+    def gerar_relatorio_completo_docx(historico_jogadores, resultados_analytics=None, filename="relatorio_bagre_completo.docx", light_theme=True):
         """
         Gera relatório Word completo (.docx) com capa, tabela, gráficos e metodologia.
         Requer python-docx. Retorna o caminho do arquivo ou None em caso de erro.
@@ -322,7 +347,7 @@ class GeradorRelatorios:
             caminho_ciclo = filename.replace(".docx", "_ciclo.png")
 
             # 1. Comparativo
-            GeradorRelatorios.gerar_grafico_comparativo(historico_jogadores, caminho_comparativo)
+            GeradorRelatorios.gerar_grafico_comparativo(historico_jogadores, caminho_comparativo, light_theme=light_theme)
 
             # 2. Hype Index (requer mín. 3 jogadores)
             if len(historico_jogadores) >= 3:
@@ -331,7 +356,7 @@ class GeradorRelatorios:
                     df_hype = pd.DataFrame(historico_jogadores)
                     # Certificar que colunas necessárias existem
                     if "valor_milhoes" in df_hype.columns and "gols" in df_hype.columns and "assists" in df_hype.columns:
-                        analisar_hype_index(df_hype, img_path=caminho_hype)
+                        analisar_hype_index(df_hype, img_path=caminho_hype, light_theme=light_theme)
                 except Exception as ex:
                     print(f"Erro ao gerar hype_index dinamico: {ex}")
 
@@ -342,7 +367,7 @@ class GeradorRelatorios:
                     pool_restante = sorted(historico_jogadores, key=lambda x: x.get("valor_milhoes", 0), reverse=True)
                     jogador_ref = pool_restante[0]
                     pool = pool_restante[1:]
-                    espelho_pedigree(jogador_ref, pool, img_path=caminho_radar)
+                    espelho_pedigree(jogador_ref, pool, img_path=caminho_radar, light_theme=light_theme)
                 except Exception as ex:
                     print(f"Erro ao gerar radar dinamico: {ex}")
 
@@ -361,7 +386,7 @@ class GeradorRelatorios:
                 if len(jogadores_com_idade) >= 3:
                     df_ciclo = pd.DataFrame(jogadores_com_idade)
                     if df_ciclo["idade"].nunique() >= 2:
-                        analisar_ciclo_de_vida(df_ciclo, img_path=caminho_ciclo)
+                        analisar_ciclo_de_vida(df_ciclo, img_path=caminho_ciclo, light_theme=light_theme)
             except Exception as ex:
                 print(f"Erro ao gerar ciclo_vida dinamico: {ex}")
 
