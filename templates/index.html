@@ -436,6 +436,44 @@ table.dt td.gl-nome { font-weight: 700; letter-spacing: .5px; }
 .toast-ok  { border: 1px solid var(--green); color: var(--green); box-shadow: var(--glow-sm); }
 .toast-err { border: 1px solid var(--red);   color: var(--red);
              box-shadow: 0 0 4px var(--red); }
+
+/* Autocomplete Dropdown */
+.ac-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--panel2);
+  border: 1px solid var(--green);
+  border-radius: var(--radius-sm);
+  z-index: 1000;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  margin-top: 4px;
+}
+.ac-item {
+  padding: var(--sp-sm) var(--sp-md);
+  cursor: pointer;
+  border-bottom: 1px solid #222;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.15s, color 0.15s;
+}
+.ac-item:hover {
+  background: var(--green);
+  color: #000;
+}
+.ac-item:last-child {
+  border-bottom: none;
+}
+.ac-item .ac-team {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  letter-spacing: 0.5px;
+}
 </style>
 </head>
 <body>
@@ -616,9 +654,10 @@ table.dt td.gl-nome { font-weight: 700; letter-spacing: .5px; }
         <div class="card bagre-card">
           <div class="ctitle">Busca</div>
           <div class="frow">
-            <div class="fg" style="flex:2">
+            <div class="fg" style="flex:2; position:relative;">
               <label>Nome do jogador *</label>
-              <input id="sc-nome" class="bagre-input" type="text" placeholder="ex: Neymar Jr.">
+              <input id="sc-nome" class="bagre-input" type="text" placeholder="ex: Neymar Jr." autocomplete="off">
+              <div id="sc-autocomplete" class="ac-dropdown" style="display:none;"></div>
             </div>
           </div>
           <button class="btn-p bagre-btn" onclick="doScout()">BUSCAR</button>
@@ -1162,6 +1201,74 @@ async function fetchScouts(names, outEl){
   outEl.innerHTML=warnHtml;
   return {valid, warns};
 }
+
+/* ── AUTOCOMPLETE JOGADORES ─────────────────────────────────── */
+let scDebounceTimer = null;
+
+$('sc-nome').addEventListener('input', e => {
+  clearTimeout(scDebounceTimer);
+  const q = e.target.value.trim();
+  if (q.length < 2) {
+    hideAutocomplete();
+    return;
+  }
+  scDebounceTimer = setTimeout(async () => {
+    try {
+      const d = await api('GET', `/v1/search?query=${encodeURIComponent(q)}`);
+      const sugs = d.response?.suggestions || [];
+      showAutocomplete(sugs);
+    } catch (err) {
+      console.error("Autocomplete error:", err);
+    }
+  }, 250);
+});
+
+$('sc-nome').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    setTimeout(hideAutocomplete, 150);
+  }
+});
+
+function showAutocomplete(sugs) {
+  const ac = $('sc-autocomplete');
+  if (!sugs.length) {
+    hideAutocomplete();
+    return;
+  }
+  ac.innerHTML = sugs.map(s => {
+    const club = s.teamName ? s.teamName : '';
+    const label = club ? `<span class="ac-team">${esc(club)}</span>` : '';
+    const nameEsc = encodeURIComponent(s.name);
+    return `
+      <div class="ac-item" onclick="selectAutocomplete(decodeURIComponent('${nameEsc}'))">
+        <span>${esc(s.name)}</span>
+        ${label}
+      </div>
+    `;
+  }).join('');
+  ac.style.display = 'block';
+}
+
+function selectAutocomplete(name) {
+  $('sc-nome').value = name;
+  hideAutocomplete();
+  doScout(name);
+}
+
+function hideAutocomplete() {
+  const ac = $('sc-autocomplete');
+  if (ac) {
+    ac.innerHTML = '';
+    ac.style.display = 'none';
+  }
+}
+
+// Hide dropdown when clicking outside
+document.addEventListener('click', e => {
+  if (e.target.id !== 'sc-nome' && e.target.id !== 'sc-autocomplete') {
+    hideAutocomplete();
+  }
+});
 
 /* ── SCOUT ──────────────────────────────────────────────────── */
 const FONTE_BADGE = {

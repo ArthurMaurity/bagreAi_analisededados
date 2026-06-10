@@ -113,52 +113,39 @@ def realizar_scout_processado(nome_jogador, player_id=None, team_id=None):
                         ],
                     }
 
-        # Buscar dados no elenco do clube
+        # Buscar dados diretamente via detalhes do jogador (API v3)
         if player_id and str(player_id).isdigit():
-            if not team_id or not str(team_id).isdigit():
-                print(f"[STEP 1] Buscando time do jogador ID {player_id}...")
-                busca = motor.buscar_jogador(nome_jogador)
-                suggestions = (busca.get("response", {}).get("suggestions", [])
-                               if busca else [])
-                for sug in suggestions:
-                    if str(sug.get("id")) == str(player_id):
-                        team_id = sug.get("teamId")
+            print(f"[STEP 1] Buscando estatísticas diretas do jogador ID {player_id}...")
+            detalhes = motor.obter_detalhes_jogador(player_id)
+            if detalhes and detalhes.get("response"):
+                total_gols = 0
+                total_assists = 0
+                for item in detalhes["response"]:
+                    player_info = item.get("player", {})
+                    if not nome_jogador:
+                        nome_jogador = player_info.get("name", nome_jogador)
+                    stats_list = item.get("statistics", [])
+                    for stat in stats_list:
+                        team = stat.get("team", {})
+                        league = stat.get("league", {})
                         if not clube_nome:
-                            clube_nome = sug.get("teamName", "")
+                            clube_nome = team.get("name", "")
                         if not liga_nome:
-                            liga_nome = sug.get("league", "")
-                        break
-
-            if team_id and str(team_id).isdigit():
-                print(f"[STEP 1] Buscando elenco do clube ID {team_id}...")
-                elenco_data = motor.listar_elenco_clube(team_id)
-                resp_data = elenco_data.get("response", {}) if elenco_data else {}
-                squad = (resp_data.get("list", {}).get("squad", [])
-                         or resp_data.get("squad", []))
-
-                for group in squad:
-                    for member in group.get("members", []):
-                        if str(member.get("id")) == str(player_id):
-                            gols = member.get("goals", 0)
-                            assists = member.get("assists", 0)
-                            val_bytes = member.get("transferValue", 0)
-                            if val_bytes:
-                                valor_milhoes = max(val_bytes / 1_000_000, 0.1)
-                            if not clube_nome:
-                                clube_nome = member.get("teamName", "")
-                            if not liga_nome:
-                                liga_nome = member.get("league", "")
-                            fonte = "api_principal"
-                            print(
-                                f"[STEP 1 ✓] {gols} Gols | {assists} Assists "
-                                f"| €{valor_milhoes}M | {clube_nome} ({liga_nome})"
-                            )
-                            break
-                    if gols is not None:
-                        break
-
-                if gols is None:
-                    print("[STEP 1] Jogador não encontrado no elenco.")
+                            liga_nome = league.get("name", "")
+                        
+                        g_info = stat.get("goals", {})
+                        total_gols += g_info.get("total") or 0
+                        total_assists += g_info.get("assists") or 0
+                
+                gols = total_gols
+                assists = total_assists
+                fonte = "api_principal"
+                print(
+                    f"[STEP 1 ✓] {gols} Gols | {assists} Assists "
+                    f"| {clube_nome} ({liga_nome})"
+                )
+            else:
+                print("[STEP 1] Detalhes do jogador não encontrados.")
     except Exception as e:
         print(f"[STEP 1 WARN] RapidAPI falhou: {e}")
 
@@ -167,8 +154,18 @@ def realizar_scout_processado(nome_jogador, player_id=None, team_id=None):
         try:
             print("[STEP 2] Usando resultado Transfermarkt pré-buscado...")
             dados_tm = _tm_pre  # usa resultado pré-buscado em paralelo
+            val_str = None
             if dados_tm and dados_tm.get("response", {}).get("players"):
-                val_str = dados_tm["response"]["players"][0].get("marketValue", "1m")
+                val_str = dados_tm["response"]["players"][0].get("marketValue")
+            
+            # Se não obtivemos valor ou se o valor for '-' ou 0, e o nome resolvido for diferente do termo de busca original, tentamos buscar com o nome resolvido
+            if (not val_str or val_str == "-" or clean_currency(val_str) == 0.0) and normalizar_texto(nome_jogador) != nome_norm:
+                print(f"[STEP 2] Valor inválido com termo original '{nome_norm}'. Tentando buscar resolved name '{nome_jogador}'...")
+                dados_tm = motor.obter_valor_mercado(nome_jogador)
+                if dados_tm and dados_tm.get("response", {}).get("players"):
+                    val_str = dados_tm["response"]["players"][0].get("marketValue")
+
+            if val_str:
                 valor_eur = clean_currency(val_str)
                 valor_milhoes = max(valor_eur / 1_000_000, 0.1)
                 fonte = "transfermarkt"

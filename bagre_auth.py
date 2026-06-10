@@ -1,6 +1,7 @@
 """
 bagre_auth.py - Controle de acesso por tier para o Bagre.ai
 """
+from typing import Optional
 import sys
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
@@ -70,7 +71,7 @@ def verificar_acesso(api_key: str, funcionalidade: str) -> tuple[bool, str]:
     return True, "Acesso permitido."
 
 
-def info_plano(api_key: str) -> dict | None:
+def info_plano(api_key: str) -> Optional[dict]:
     """Retorna informações do plano do usuário ou None se api_key inválida."""
     from bagre_database import LIMITES
     usuario = _db.autenticar(api_key)

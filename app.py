@@ -225,6 +225,23 @@ def get_pedirato_da_semana(usuario: dict = Depends(get_current_user)):
     return pedirato_da_semana()
 
 
+@app.get("/v1/search", tags=["Várzea (free)"])
+@limiter.limit("60/minute")
+def search_v1(
+    request: Request,
+    query: str = Query(..., description="Termo de busca"),
+    usuario: dict = Depends(get_current_user),
+):
+    """
+    Busca sugestões de jogadores para autocomplete.
+    """
+    query = query.strip()
+    if not query or len(query) < 2:
+        return {"status": "success", "response": {"suggestions": []}}
+    resultado = motor.buscar_jogador(query)
+    return resultado or {"status": "success", "response": {"suggestions": []}}
+
+
 # ── TIER VÁRZEA — SCOUT ────────────────────────────────────────────────────────
 @app.get("/v1/scout", tags=["Várzea (free)"])
 @limiter.limit("10/minute")

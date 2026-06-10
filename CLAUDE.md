@@ -1,3 +1,4 @@
+
 # CLAUDE.md - Diretrizes do Projeto Bagre.ai
 
 ## 1. Visão Geral do Projeto

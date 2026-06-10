@@ -5,6 +5,7 @@ Sem dependencias externas: usa apenas sqlite3 nativo do Python.
 import sys
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
+from typing import Optional
 import os
 import sqlite3
 import uuid
@@ -115,7 +116,7 @@ class BagreDatabase:
             )
         return api_key
 
-    def autenticar(self, api_key: str) -> dict | None:
+    def autenticar(self, api_key: str) -> Optional[dict]:
         """Retorna dict do usuario ou None se api_key invalida."""
         with self._conn() as conn:
             row = conn.execute(
@@ -199,7 +200,7 @@ class BagreDatabase:
         ]
 
     # ── CACHE DE JOGADORES ─────────────────────────────────────────────────────
-    def buscar_cache(self, nome_normalizado: str) -> dict | None:
+    def buscar_cache(self, nome_normalizado: str) -> Optional[dict]:
         """
         Retorna dados em cache se existirem e tiverem menos de 24h.
         Retorna None se expirado ou inexistente.
@@ -220,7 +221,7 @@ class BagreDatabase:
 
         return json.loads(row["dados_json"])
 
-    def buscar_cache_stale(self, nome_normalizado: str) -> dict | None:
+    def buscar_cache_stale(self, nome_normalizado: str) -> Optional[dict]:
         """Retorna dados em cache ignorando o limite de 24h (fallback de último recurso)."""
         with self._conn() as conn:
             row = conn.execute(

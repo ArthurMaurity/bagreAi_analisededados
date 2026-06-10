@@ -135,14 +135,15 @@ MOCK_PLAYERS = [
 class BagreBackend:
     """
     Motor Central de Dados - Bagre.ai
-    Integra múltiplas fontes: RapidAPI (Live Data), Transfermarkt e FBref.
+    Integra múltiplas fontes: API-Football v3 (Gols/Assists) e Transfermarkt (Valores).
     """
 
     def __init__(self):
-        self.base_url = "https://free-api-live-football-data.p.rapidapi.com"
+        # Migração para a API-Football Oficial v3 do API-Sports / RapidAPI
+        self.base_url = "https://api-football-v1.p.rapidapi.com/v3"
         api_key = os.getenv("RAPIDAPI_KEY", "")
         self.headers = {
-            "x-rapidapi-host": "free-api-live-football-data.p.rapidapi.com",
+            "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
             "x-rapidapi-key": api_key,
         }
 
@@ -167,20 +168,45 @@ class BagreBackend:
         return None
 
     # ==========================================
-    # MÓDULO I: FOOTBALL LIVE DATA
+    # MÓDULO I: FOOTBALL LIVE DATA (API-Football v3)
     # ==========================================
 
     def pesquisa_global(self, termo):
         """Busca abrangente por jogadores, clubes e ligas."""
-        return self._executar_get(f"{self.base_url}/football-all-search", {"search": termo})
+        return self.buscar_jogador(termo)
 
     def buscar_jogador(self, nome_jogador):
-        """Localiza o perfil e o ID único de um atleta. Cai no dataset mock se a API falhar."""
-        result = self._executar_get(f"{self.base_url}/football-players-search", {"search": nome_jogador})
-        suggestions = result.get("response", {}).get("suggestions", []) if result else []
-        if suggestions:
-            return result
-        # Fallback: busca no dataset mock (substring, case-insensitive)
+        """Localiza o perfil e o ID único de um atleta na API-Football v3."""
+        # Se a chave for placeholder, cai direto no mock para evitar erros 401
+        api_key = self.headers.get("x-rapidapi-key", "")
+        if not api_key or "your_rapidapi_key_here" in api_key:
+            return self._buscar_jogador_mock(nome_jogador)
+
+        result = self._executar_get(f"{self.base_url}/players", {"search": nome_jogador, "season": "2025"})
+        if result and result.get("response"):
+            suggestions = []
+            for item in result["response"]:
+                player = item.get("player", {})
+                stats = item.get("statistics", [{}])[0] if item.get("statistics") else {}
+                team = stats.get("team", {})
+                league = stats.get("league", {})
+                suggestions.append({
+                    "id": player.get("id"),
+                    "name": player.get("name"),
+                    "teamName": team.get("name", ""),
+                    "teamId": team.get("id"),
+                    "league": league.get("name", ""),
+                    "type": "player"
+                })
+            return {
+                "status": "success",
+                "response": {
+                    "suggestions": suggestions
+                }
+            }
+        return self._buscar_jogador_mock(nome_jogador)
+
+    def _buscar_jogador_mock(self, nome_jogador):
         nome_lower = nome_jogador.lower()
         matches = [p for p in MOCK_PLAYERS if nome_lower in p["name"].lower()]
         return {
@@ -200,32 +226,118 @@ class BagreBackend:
             },
         }
 
+    def _obter_detalhes_jogador_mock(self, player_id):
+        match = None
+        for p in MOCK_PLAYERS:
+            if str(p["id"]) == str(player_id):
+                match = p
+                break
+        if not match:
+            return None
+        return {
+            "response": [
+                {
+                    "player": {
+                        "id": int(match["id"]) if str(match["id"]).isdigit() else match["id"],
+                        "name": match["name"]
+                    },
+                    "statistics": [
+                        {
+                            "team": {
+                                "id": int(match["teamId"]) if str(match["teamId"]).isdigit() else match["teamId"],
+                                "name": match["teamName"]
+                            },
+                            "league": {
+                                "name": match["league"]
+                            },
+                            "goals": {
+                                "total": match["goals"],
+                                "assists": match["assists"]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+
     def obter_detalhes_jogador(self, player_id):
-        """Recupera a ficha técnica e estatísticas disponíveis no provedor principal."""
-        return self._executar_get(f"{self.base_url}/football-get-player-detail", {"playerid": player_id})
+        """Recupera estatísticas do jogador por ID na API-Football v3."""
+        api_key = self.headers.get("x-rapidapi-key", "")
+        if not api_key or "your_rapidapi_key_here" in api_key:
+            return self._obter_detalhes_jogador_mock(player_id)
+        
+        result = self._executar_get(f"{self.base_url}/players", {"id": player_id, "season": "2025"})
+        if result and result.get("response"):
+            return result
+        return self._obter_detalhes_jogador_mock(player_id)
 
     def obter_estatisticas_partida(self, event_id):
-        """Coleta dados táticos detalhados de um jogo específico."""
-        return self._executar_get(f"{self.base_url}/football-get-match-event-all-stats", {"eventid": event_id})
+        """Coleta dados táticos detalhados de um jogo específico (mantido por compatibilidade)."""
+        return self._executar_get(f"{self.base_url}/fixtures/statistics", {"fixture": event_id})
 
     # ==========================================
-    # MÓDULO II: TRANSFERMARKT (FINANCEIRO)
+    # MÓDULO II: TRANSFERMARKT (FINANCEIRO & SCRAPER FALLBACK)
     # ==========================================
+
+    def obter_valor_mercado_scraped(self, nome_jogador):
+        """
+        [Opção A] Scraper Nativo do Transfermarkt (Fallback de emergência)
+        Extrai o valor de mercado a partir da página de busca clássica que não usa Svelte.
+        """
+        headers_sc = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        url = "https://www.transfermarkt.com/schnellsuche/ergebnis/schnellsuche"
+        params = {"query": nome_jogador}
+        
+        try:
+            from bs4 import BeautifulSoup
+            response = requests.get(url, headers=headers_sc, params=params, timeout=10)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, "html.parser")
+                tables = soup.find_all("table")
+                if tables:
+                    table = tables[0]
+                    rows = table.find_all("tr")
+                    for row in rows[1:]:
+                        cells = row.find_all(["td", "th"])
+                        for cell in cells:
+                            text = cell.text.strip()
+                            if text.startswith("€") or text == "-":
+                                print(f"[SCRAPER ✓] Transfermarkt Scraped: '{nome_jogador}' = {text}")
+                                return {
+                                    "response": {
+                                        "players": [
+                                            {
+                                                "marketValue": text
+                                            }
+                                        ]
+                                    }
+                                }
+        except Exception as e:
+            print(f"[SCRAPER WARN] Erro ao raspar Transfermarkt: {e}")
+        return None
 
     def obter_valor_mercado(self, nome_jogador):
         """
-        Consulta o valor de mercado atualizado via API do Transfermarkt.
-        Essencial para o cálculo do denominador no Índice PediRato.
-        O campo 'marketValue' retornado (ex: '€15m', '€500k') é tratado por
-        clean_currency() em bagre_scout.py — seção 3.3 do artigo.
+        Consulta o valor de mercado atualizado via API do Transfermarkt (RapidAPI).
+        Cai automaticamente no Scraper Nativo (Opção A) se a chave for inválida ou falhar.
         """
+        api_key = self.headers.get("x-rapidapi-key", "")
+        if not api_key or "your_rapidapi_key_here" in api_key:
+            return self.obter_valor_mercado_scraped(nome_jogador)
+
         url = "https://transfermarkt.p.rapidapi.com/players/search"
         headers_tm = {
             "x-rapidapi-host": "transfermarkt.p.rapidapi.com",
-            "x-rapidapi-key": self.headers["x-rapidapi-key"]
+            "x-rapidapi-key": api_key
         }
-        # Tratamento de strings monetárias — seção 3.3 do artigo
-        return self._executar_get(url, params={"query": nome_jogador}, headers=headers_tm)
+        result = self._executar_get(url, params={"query": nome_jogador}, headers=headers_tm)
+        if result and result.get("response", {}).get("players"):
+            return result
+            
+        # Fallback para o scraper próprio
+        return self.obter_valor_mercado_scraped(nome_jogador)
 
     # ==========================================
     # MÓDULO III: FBREF (SCOUTING AVANÇADO)
@@ -233,12 +345,9 @@ class BagreBackend:
 
     def obter_tabela_fbref(self, url_atleta):
         """
-        Captura tabelas de performance (xG, passes, criação) diretamente do FBref.
-        Utiliza o motor do Pandas para converter HTML em estruturado (DataFrame).
+        Captura tabelas de performance diretamente do FBref (mantido para compatibilidade).
         """
         try:
-            # O FBref bloqueia requisições sem User-Agent em alguns casos; 
-            # usamos requests para enviar cabeçalhos apropriados.
             from io import StringIO
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
@@ -246,41 +355,14 @@ class BagreBackend:
             response = requests.get(url_atleta, headers=headers, timeout=15)
             response.raise_for_status()
             tabelas = pd.read_html(StringIO(response.text))
-            # Retorna a primeira tabela (geralmente 'Standard Stats')
             return tabelas[0] if tabelas else pd.DataFrame()
         except Exception as e:
             print(f"Erro ao processar dados do FBref: {e}")
             return pd.DataFrame()
 
-    # ==========================================
-    # MÓDULO IV: UTILITÁRIOS DE ELENCO
-    # ==========================================
-
-    def listar_elenco_clube(self, team_id):
-        """Lista todos os jogadores vinculados a um ID de time. Cai no dataset mock se a API falhar."""
-        result = self._executar_get(f"{self.base_url}/football-get-list-player", {"teamid": team_id})
-        if result:
-            return result
-        # Fallback: filtra jogadores do time no dataset mock
-        members = [
-            {
-                "id": p["id"],
-                "name": p["name"],
-                "teamName": p["teamName"],
-                "goals": p["goals"],
-                "assists": p["assists"],
-                "transferValue": p["transferValue"],
-                "league": p["league"],
-            }
-            for p in MOCK_PLAYERS if str(p["teamId"]) == str(team_id)
-        ]
-        return {"response": {"squad": [{"members": members}]}}
-
     def buscar_stats_fbref(self, nome_jogador):
         """
-        Tenta buscar gols e assists no FBref via redirect de busca por nome.
-        FBref redireciona para a página do jogador quando há resultado único.
-        Retorna (gols, assists) ou None.
+        Tenta buscar gols e assists no FBref via redirect (mantido para compatibilidade).
         """
         try:
             from io import StringIO
@@ -309,9 +391,56 @@ class BagreBackend:
             print(f"FBref indisponível: {e}")
             return None
 
-# --- BLOCO DE VALIDAÇÃO DO SISTEMA ---
+    # ==========================================
+    # MÓDULO IV: UTILITÁRIOS DE ELENCO
+    # ==========================================
+
+    def listar_elenco_clube(self, team_id):
+        """
+        Lista jogadores vinculados a um ID de time com suas estatísticas de Gols e Assists.
+        Usa o endpoint /players da API-Football v3 restringindo por clube e temporada.
+        """
+        api_key = self.headers.get("x-rapidapi-key", "")
+        if not api_key or "your_rapidapi_key_here" in api_key:
+            return self._listar_elenco_clube_mock(team_id)
+
+        result = self._executar_get(f"{self.base_url}/players", {"team": team_id, "season": "2025"})
+        if result and result.get("response"):
+            members = []
+            for item in result["response"]:
+                player = item.get("player", {})
+                stats = item.get("statistics", [{}])[0] if item.get("statistics") else {}
+                goals = stats.get("goals", {})
+                members.append({
+                    "id": player.get("id"),
+                    "name": player.get("name"),
+                    "teamName": stats.get("team", {}).get("name", ""),
+                    "goals": goals.get("total") or 0,
+                    "assists": goals.get("assists") or 0,
+                    "transferValue": 0, # Será resolvido pelo scraper do Transfermarkt
+                    "league": stats.get("league", {}).get("name", ""),
+                })
+            return {"response": {"squad": [{"members": members}]}}
+
+        return self._listar_elenco_clube_mock(team_id)
+
+    def _listar_elenco_clube_mock(self, team_id):
+        members = [
+            {
+                "id": p["id"],
+                "name": p["name"],
+                "teamName": p["teamName"],
+                "goals": p["goals"],
+                "assists": p["assists"],
+                "transferValue": p["transferValue"],
+                "league": p["league"],
+            }
+            for p in MOCK_PLAYERS if str(p["teamId"]) == str(team_id)
+        ]
+        return {"response": {"squad": [{"members": members}]}}
+
+
 if __name__ == "__main__":
-    # Testes de clean_currency
     casos = [
         ('€15m',   15_000_000.0),
         ('€500k',  500_000.0),
@@ -331,7 +460,7 @@ if __name__ == "__main__":
     print()
 
     motor = BagreBackend()
-    print("Iniciando validação do motor multicloud...")
+    print("Iniciando validação do motor...")
     teste = motor.buscar_jogador("Arrascaeta")
     if teste and teste.get("status") == "success":
         print("Backend Bagre.ai operacional: Pronto para integração múltipla.")
