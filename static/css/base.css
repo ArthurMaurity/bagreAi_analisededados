@@ -1,0 +1,73 @@
+/* ── TOKENS ──────────────────────────────────────────────────── */
+:root {
+  /* Cores — tema Cyberpunk Football */
+  --bg:       #000000;
+  --panel:    #1A1A1A;
+  --panel2:   #111111;
+  --green:    #39FF14;
+  --red:      #FF3131;
+  --white:    #FFFFFF;
+  --muted:    #888888;
+  /* Bordas / brilho (derivados das cores acima) */
+  --border:   1px solid var(--green);
+  --glow:     0 0 8px var(--green), 0 0 20px var(--green);
+  --glow-sm:  0 0 4px var(--green);
+  /* Tipografia */
+  --font:     'Rajdhani', sans-serif;
+  --fs-base:  15px;
+  /* Raios de borda */
+  --radius:     6px;
+  --radius-md:  4px;
+  --radius-sm:  3px;
+  /* Espaçamentos */
+  --sp-xs:    4px;
+  --sp-sm:    8px;
+  --sp-md:    12px;
+  --sp-lg:    18px;
+  --sp-xl:    22px;
+  /* Dimensões de layout */
+  --sw:       220px;
+  --hh:       56px;
+  --sbh:      62px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--white);
+             font-family: var(--font); font-size: var(--fs-base); overflow: hidden; }
+a { color: var(--green); }
+input, button { font-family: inherit; }
+button { cursor: pointer; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--panel); }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+/* ── LOGIN ───────────────────────────────────────────────────── */
+#login-screen {
+  position: fixed; inset: 0; display: flex;
+  align-items: center; justify-content: center;
+  background: var(--bg); z-index: 1000;
+}
+#login-screen.hidden { display: none; }
+.lcard {
+  background: var(--panel); border: var(--border); border-radius: 8px;
+  padding: 48px 40px; width: 420px; text-align: center; box-shadow: var(--glow);
+}
+.llogo { font-size: 2.8rem; font-weight: 700; letter-spacing: 4px;
+         color: var(--green); text-shadow: var(--glow); margin-bottom: 6px; }
+.lsub  { color: var(--muted); font-size: .82rem; letter-spacing: 2px;
+         text-transform: uppercase; margin-bottom: 36px; }
+.llbl  { display: block; text-align: left; font-size: .7rem; letter-spacing: 2px;
+         text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+#apikey-input {
+  width: 100%; padding: 12px 14px; background: var(--bg); color: var(--white);
+  border: 1px solid #444; border-radius: 4px; font-size: .9rem; letter-spacing: 1px;
+  margin-bottom: 18px; transition: border-color .2s;
+}
+#apikey-input:focus { outline: none; border-color: var(--green); box-shadow: var(--glow-sm); }
+#login-btn {
+  width: 100%; padding: 13px; background: var(--green); color: #000;
+  border: none; border-radius: 4px; font-size: 1rem; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase; transition: box-shadow .2s;
+}
+#login-btn:hover { box-shadow: var(--glow); }
+#login-error { margin-top: 12px; color: var(--red); font-size: .84rem; min-height: 18px; }
+
