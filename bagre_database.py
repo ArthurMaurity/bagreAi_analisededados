@@ -85,9 +85,9 @@ class BagreDatabase:
     # ── SEED DE USUÁRIOS DE TESTE ──────────────────────────────────────────────
     def _seed_usuarios(self):
         seeds = [
-            ("teste_free@bagre.ai",     "Usuario Varzea",   "varzea"),
-            ("teste_olheiro@bagre.ai",  "Usuario Olheiro",  "olheiro"),
-            ("teste_diretor@bagre.ai",  "Usuario Diretor",  "diretor"),
+            ("teste_free@bagre.ai",     "Usuario Varzea",   "varzea",  "3d5d355c-0f8e-4e34-8c48-7f2163c63a2e"),
+            ("teste_olheiro@bagre.ai",  "Usuario Olheiro",  "olheiro", "bc066b0a-2fb3-40ec-8714-e182a5109c75"),
+            ("teste_diretor@bagre.ai",  "Usuario Diretor",  "diretor", "920996aa-e49f-4613-8b74-1015d1397658"),
         ]
         with self._conn() as conn:
             existentes = conn.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0]
@@ -97,16 +97,17 @@ class BagreDatabase:
             print("\n" + "=" * 56)
             print("  BAGRE.AI — Primeira inicializacao do banco de dados")
             print("=" * 56)
-            for email, nome, plano in seeds:
-                api_key = self.criar_usuario(email, nome, plano)
+            for email, nome, plano, key in seeds:
+                api_key = self.criar_usuario(email, nome, plano, key)
                 print(f"  [{plano.upper():>8}]  {email}")
                 print(f"             API KEY: {api_key}\n")
             print("=" * 56 + "\n")
 
     # ── USUÁRIOS ───────────────────────────────────────────────────────────────
-    def criar_usuario(self, email: str, nome: str, plano: str) -> str:
-        """Cria usuario e retorna api_key (uuid4)."""
-        api_key   = str(uuid.uuid4())
+    def criar_usuario(self, email: str, nome: str, plano: str, api_key: str = None) -> str:
+        """Cria usuario e retorna api_key (uuid4 se nao fornecida)."""
+        if not api_key:
+            api_key = str(uuid.uuid4())
         criado_em = datetime.now().isoformat()
         with self._conn() as conn:
             conn.execute(

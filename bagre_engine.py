@@ -336,26 +336,45 @@ class BagreBackend:
     def obter_valor_mercado(self, nome_jogador):
         """
         Consulta o valor de mercado atualizado via API do Transfermarkt (RapidAPI).
-        Cai automaticamente no Scraper Nativo (Opção A) se a chave for inválida ou falhar.
+        Tenta múltiplos hosts e formatos de resposta para garantir compatibilidade.
+        Cai no Scraper Nativo se a chave for inválida ou todas as tentativas de API falharem.
         """
-        # Se for chave direta da API-Sports, não funciona na RapidAPI do Transfermarkt; cai no scraper
+        # Se for chave direta da API-Sports, não funciona na RapidAPI; cai no scraper
         if "x-apisports-key" in self.headers:
             return self.obter_valor_mercado_scraped(nome_jogador)
 
         api_key = self.headers.get("x-rapidapi-key", "")
-        if not api_key or "your_rapidapi_key_here" in api_key:
+        if not api_key or "your_rapidapi_key" in api_key.lower():
             return self.obter_valor_mercado_scraped(nome_jogador)
 
-        url = "https://transfermarkt.p.rapidapi.com/players/search"
-        headers_tm = {
-            "x-rapidapi-host": "transfermarkt.p.rapidapi.com",
-            "x-rapidapi-key": api_key
-        }
-        result = self._executar_get(url, params={"query": nome_jogador}, headers=headers_tm)
-        if result and result.get("response", {}).get("players"):
-            return result
+        # Tentativa 1: Host 'transfermarkt.p.rapidapi.com' (API Dojo)
+        # Endpoint: /search
+        host1 = "transfermarkt.p.rapidapi.com"
+        url1 = f"https://{host1}/search"
+        headers1 = {"x-rapidapi-host": host1, "x-rapidapi-key": api_key}
+        
+        result1 = self._executar_get(url1, params={"query": nome_jogador}, headers=headers1)
+        if result1:
+            # API Dojo retorna 'players' dentro de 'response' ou diretamente
+            players = result1.get("response", {}).get("players") or result1.get("players")
+            if players:
+                return {"response": {"players": players}}
+
+        # Tentativa 2: Host 'transfermarkt-api.p.rapidapi.com'
+        # Endpoint: /api/player/search/{name}
+        host2 = "transfermarkt-api.p.rapidapi.com"
+        url2 = f"https://{host2}/api/player/search/{nome_jogador}"
+        headers2 = {"x-rapidapi-host": host2, "x-rapidapi-key": api_key}
+        
+        result2 = self._executar_get(url2, headers=headers2)
+        if result2:
+            # Esta API pode retornar os dados em 'data' ou 'players'
+            players = result2.get("data") or result2.get("players")
+            if isinstance(players, list):
+                # Normaliza para o formato esperado
+                return {"response": {"players": players}}
             
-        # Fallback para o scraper próprio
+        # Fallback final para o scraper próprio
         return self.obter_valor_mercado_scraped(nome_jogador)
 
     # ==========================================

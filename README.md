@@ -10,7 +10,12 @@ cp .env.example .env          # preencha RAPIDAPI_KEY e SECRET_KEY
 python app.py
 ```
 
-No primeiro start, o banco é criado automaticamente e as API keys de teste são impressas no terminal. Guarde-as para usar nos endpoints.
+O banco de dados é criado automaticamente com chaves de teste estáticas que já funcionam com o frontend:
+- **Várzea:** `3d5d355c-0f8e-4e34-8c48-7f2163c63a2e`
+- **Olheiro:** `bc066b0a-2fb3-40ec-8714-e182a5109c75`
+- **Diretor:** `920996aa-e49f-4613-8b74-1015d1397658`
+
+> **Dica:** A autenticação é opcional para execução local. Se nenhuma chave for fornecida, o sistema assume automaticamente o plano **Diretor** para facilitar o desenvolvimento.
 
 ## Testando
 

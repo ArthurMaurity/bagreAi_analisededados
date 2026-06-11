@@ -75,8 +75,9 @@ function buildHypeChart(canvasId, d){
     data:{datasets},
     options:{ responsive:true, maintainAspectRatio:false,
       scales:cyberScales('Performance (Gols + Assists)','Valor de Mercado (€M)'),
-      plugins:cyberPlugins(c=>{ const p=c.raw;
-        return (p.nome?p.nome+' — ':'')+'perf '+p.x+' · €'+p.y+'M'; }) }
+      plugins:{...cyberPlugins(c=>{ const p=c.raw;
+        return (p.nome?p.nome+' — ':'')+'perf '+p.x+' · €'+p.y+'M'; }),
+        legend:{position:'bottom'}} }
   });
 }
 
@@ -101,8 +102,9 @@ function buildCicloChart(canvasId, d){
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       scales:cyberScales('Idade','Valor de Mercado (€M)'),
-      plugins:cyberPlugins(c=>{ const p=c.raw;
-        return (p.nome?p.nome+' — ':'')+(Math.round(p.x*10)/10)+' anos · €'+(Math.round(p.y*10)/10)+'M'; }) }
+      plugins:{...cyberPlugins(c=>{ const p=c.raw;
+        return (p.nome?p.nome+' — ':'')+(Math.round(p.x*10)/10)+' anos · €'+(Math.round(p.y*10)/10)+'M'; }),
+        legend:{position:'bottom'}} }
   });
 }
 
@@ -377,6 +379,8 @@ function registrarAutocompleteDinamico(inp, ac) {
       return;
     }
     debounceTimer = setTimeout(async () => {
+      ac.innerHTML = '<div class="ac-item" style="color:var(--muted);pointer-events:none">Buscando...</div>';
+      ac.style.display = 'block';
       try {
         const d = await api('GET', `/v1/search?query=${encodeURIComponent(q)}`);
         const sugs = d.response?.suggestions || [];
@@ -674,7 +678,7 @@ async function doHype(){
     toast('ok', 'Hype Index calculado');
     const rows=(d.jogadores||[]).map(j=>`<tr>
       <td>${esc(j.nome)}</td><td>€${j.valor_milhoes}M</td>
-      <td>${(j.performance||0).toFixed(2)}</td><td>€${(j.valor_predito||0).toFixed(1)}M</td>
+      <td>${(j.performance||0).toFixed(2)}</td><td>€${(j.valor_previsto||0).toFixed(1)}M</td>
       <td>${(j.residuo||0).toFixed(2)}</td><td>${badge(j.classificacao)}</td></tr>`).join('');
     out.innerHTML=`<div class="card" style="margin-top:14px">
       <div class="ctitle">Resultado — Hype Index</div>
@@ -749,13 +753,15 @@ async function doCiclo(){
   });
   if(ageWarnings.length&&ageWarn)
     ageWarn.innerHTML=ageWarnings.map(n=>`<div class="w" style="color:#ffd700;font-size:.82rem">⚠️ Idade de '${esc(n)}' não encontrada — usando 25 como padrão</div>`).join('');
+  const idades = js.map(j=>j.idade);
+  if(new Set(idades).size === 1) return err(out,'Adicione jogadores com idades diferentes para uma regressão precisa.');
   spin(out);
   try {
     const d=await api('POST','/v1/analytics/ciclo-vida',{jogadores:js});
     toast('ok', 'Ciclo de Vida calculado');
     const rows=(d.tabela||[]).map(j=>`<tr>
       <td>${esc(j.nome)}</td><td>${j.idade}</td>
-      <td>€${j.valor_milhoes}M</td><td>€${(j.valor_predito||0).toFixed(1)}M</td>
+      <td>€${j.valor_milhoes}M</td><td>€${(j.valor_previsto||0).toFixed(1)}M</td>
       <td>${(j['desvio_%']||j.desvio||0).toFixed(1)}%</td></tr>`).join('');
     out.innerHTML=`<div class="card" style="margin-top:14px">
       <div class="ctitle">Resultado — Ciclo de Vida</div>
@@ -780,6 +786,8 @@ async function doCiclo(){
 function clearGoldenNames(){
   const div=$('golden-names');
   if(div) div.innerHTML='';
+  const out=$('golden-out');
+  if(out) out.innerHTML='';
   doGoldenList();
 }
 
@@ -797,7 +805,7 @@ async function doGoldenList(){
   const body=rows.length?{jogadores:rows,top_n:topn}:{top_n:topn};
   try {
     const d=await api('POST','/v1/golden-list', body);
-    toast('ok','Golden List gerada — '+d.total_pedigrees+' Pedigrees');
+    toast('ok','Golden List gerada — '+d.total_pedigrees+' jogadores');
     const MEDALS=['🥇','🥈','🥉'];
     const fonte = d.fonte==='dataset_padrao'
       ? '<span style="color:var(--muted);font-size:.72rem">Dataset curado Bagre.ai</span>'
@@ -819,7 +827,7 @@ async function doGoldenList(){
                         box-shadow:0 0 4px rgba(57,255,20,.5)"></div>
           </div>
         </td>
-        <td><span class="badge b-ped">PEDIGREE</span></td>
+        <td>${badge(j.classificacao)}</td>
       </tr>`;
     }).join('');
     out.innerHTML=`<div class="card" style="margin-top:14px">
@@ -935,6 +943,8 @@ window.doHype = doHype;
 window.doEsp = doEsp;
 window.doCiclo = doCiclo;
 window.doGoldenList = doGoldenList;
+window.goSection = goSection;
+window.clearGoldenNames = clearGoldenNames;
 window.rmSessao = rmSessao;
 window.addNameRow = addNameRow;
 window.selectAutocomplete = selectAutocomplete;

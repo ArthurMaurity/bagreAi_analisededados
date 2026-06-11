@@ -100,9 +100,9 @@ def analisar_ciclo_de_vida(df: pd.DataFrame, img_path: str = None, light_theme: 
     janela_inicio = float(x_range[mascara].min()) if mascara.any() else float(x.min())
     janela_fim    = float(x_range[mascara].max()) if mascara.any() else float(x.max())
 
-    df["valor_predito"] = np.polyval([a, b, c], x).round(2)
+    df["valor_previsto"] = np.polyval([a, b, c], x).round(2)
     df["desvio_%"] = (
-        (df["valor_milhoes"] - df["valor_predito"]) / df["valor_predito"].abs().clip(0.01) * 100
+        (df["valor_milhoes"] - df["valor_previsto"]) / df["valor_previsto"].abs().clip(0.01) * 100
     ).round(2)
 
     # ── Relatório textual ──────────────────────────────────────────────────────
@@ -113,7 +113,7 @@ def analisar_ciclo_de_vida(df: pd.DataFrame, img_path: str = None, light_theme: 
     print(f"  Janela ideal de revenda:  {janela_inicio:.1f} – {janela_fim:.1f} anos")
     print(f"  Equação: Valor = {a:.4f}·Idade² + {b:.4f}·Idade + {c:.4f}")
     print("\n  Detalhamento por jogador:")
-    print(df[["nome", "idade", "valor_milhoes", "valor_predito", "desvio_%"]].to_string(index=False))
+    print(df[["nome", "idade", "valor_milhoes", "valor_previsto", "desvio_%"]].to_string(index=False))
     print("=" * 58)
 
     # ── Gráfico ────────────────────────────────────────────────────────────────
@@ -207,8 +207,8 @@ def analisar_hype_index(df: pd.DataFrame, img_path: str = None, light_theme: boo
     inter = float(modelo.intercept_)
     r2    = float(modelo.score(X, y))
 
-    df["valor_predito"]  = modelo.predict(X).round(2)
-    df["residuo"]        = (df["valor_milhoes"] - df["valor_predito"]).round(2)
+    df["valor_previsto"] = modelo.predict(X).round(2)
+    df["residuo"]        = (df["valor_milhoes"] - df["valor_previsto"]).round(2)
 
     std = float(df["residuo"].std())
     df["classificacao"] = df["residuo"].apply(
@@ -226,7 +226,7 @@ def analisar_hype_index(df: pd.DataFrame, img_path: str = None, light_theme: boo
     print(f"  R² do modelo:     {r2:.4f}")
     print(f"  Desvio padrao dos residuos (s):  {std:.3f}")
     print("\n  Tabela completa:")
-    print(df[["nome", "valor_milhoes", "performance", "valor_predito", "residuo", "classificacao"]].to_string(index=False))
+    print(df[["nome", "valor_milhoes", "performance", "valor_previsto", "residuo", "classificacao"]].to_string(index=False))
     print(f"\n  [PEDI-RATOS] ({len(pedi_ratos)}) - caro demais para o que entrega:")
     print(pedi_ratos.to_string(index=False) if not pedi_ratos.empty else "  Nenhum.")
     print(f"\n  [PEDIGREES]  ({len(pedigrees)}) - entrega mais do que o preco sugere:")
@@ -490,12 +490,12 @@ def golden_list(pool=None, top_n=10):
         v = max(j.get("valor_milhoes", 0.1), 0.1)
         j["pedirato"] = (j.get("gols", 0) + j.get("assists", 0)) / v
 
-    media = sum(j["pedirato"] for j in jogadores) / len(jogadores)
-    pedigrees = sorted(
-        [j for j in jogadores if j["pedirato"] > media],
-        key=lambda j: j["pedirato"],
-        reverse=True,
-    )
+    ordenados = sorted(jogadores, key=lambda j: j["pedirato"], reverse=True)
+
+    def _classificar(p):
+        if p > 1.5: return "PEDIGREE"
+        if p > 0.5: return "REGULAR"
+        return "PEDIRATO"
 
     return [
         {
@@ -505,9 +505,9 @@ def golden_list(pool=None, top_n=10):
             "assists":       j.get("assists", 0),
             "valor_milhoes": j.get("valor_milhoes", 0.0),
             "pedirato":      round(j["pedirato"], 2),
-            "classificacao": "PEDIGREE",
+            "classificacao": _classificar(j["pedirato"]),
         }
-        for i, j in enumerate(pedigrees[:top_n])
+        for i, j in enumerate(ordenados[:top_n])
     ]
 
 
@@ -626,15 +626,6 @@ if __name__ == "__main__":
         "valor_milhoes": [180,       200,       120,     15,       20,        180],
     })
     analisar_ciclo_de_vida(df_vida)
-
-    # Frente 3
-    df_liga = pd.DataFrame({
-        "clube":                      ["Getafe", "Rayo Vallecano", "Villarreal",
-                                       "Atletico Madrid", "Barcelona", "Real Madrid"],
-        "valor_total_elenco_milhoes": [80,        95,               320,
-                                       550,              800,        1100],
-    })
-    analisar_concentracao_liga(df_liga)
 
     # Frente 4
     df_hype = pd.DataFrame({

@@ -10,3 +10,4 @@ python-docx
 scikit-learn
 slowapi
 python-dotenv
+beautifulsoup4

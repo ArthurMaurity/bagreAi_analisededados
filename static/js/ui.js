@@ -16,6 +16,7 @@ export function err(el,m){
   const txt = esc(typeof m==='object'?JSON.stringify(m):m);
   el.innerHTML=`<div class="e">⚠ ${txt}</div>`;
   toast('err', m);
+  el.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 export function toast(type, msg){
   const wrap = $('toast-wrap'); if(!wrap) return;

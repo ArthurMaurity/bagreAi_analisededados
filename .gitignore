@@ -74,6 +74,10 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
+# --- Claude Code (configurações locais de sessão) ---
+.claude/
+CLAUDE.md
+
 # --- Arquivos Dinâmicos / Relatórios do Bagre.ai ---
 # Ignora relatórios e gráficos gerados automaticamente na raiz ou pasta static
 relatorio_scout.md
