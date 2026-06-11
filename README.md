@@ -36,16 +36,17 @@ curl -H "X-API-Key: <sua_key>" \
 |------|-------|--------------|-----------------|
 | **Várzea** | Grátis | 5 requests | Scout de jogador, Índice PediRato |
 | **Olheiro** | R$ 29,90/mês | 50 requests | Várzea + Hype Index completo, Espelho Pedigree |
-| **Diretor** | R$ 997,00/mês | Ilimitado | Olheiro + Coeficiente de Gini, Ciclo de Vida, Relatórios DOCX |
+| **Diretor** | R$ 997,00/mês | Ilimitado | Olheiro + Golden List, Ciclo de Vida, Relatórios DOCX |
 
 ## Endpoints principais
 
 | Método | Rota | Tier | Rate limit |
 |--------|------|------|------------|
-| GET | `/v1/scout` | Várzea | 10/min por IP |
+| GET | `/v1/scout` | Várzea | 30/min por IP |
+| GET | `/v1/search` | Várzea | 60/min por IP |
 | POST | `/v1/analytics/hype-index` | Olheiro | 5/min por IP |
 | POST | `/v1/analytics/espelho-pedigree` | Olheiro | 5/min por IP |
-| POST | `/v1/analytics/gini` | Diretor | 5/min por IP |
+| POST | `/v1/golden-list` | Diretor | 5/min por IP |
 | POST | `/v1/analytics/ciclo-vida` | Diretor | 5/min por IP |
 | POST | `/v1/reports/docx` | Diretor | 2/min por IP |
 
@@ -69,3 +70,4 @@ curl -H "X-API-Key: <sua_key>" \
 | `DATABASE_PATH` | Caminho do arquivo SQLite | `./bagre.db` |
 | `SECRET_KEY` | Chave para assinatura interna | — |
 | `ENVIRONMENT` | `development` ou `production` | `development` |
+| `DEFAULT_DIRETOR_KEY` | API key padrão usada quando nenhuma chave é enviada | chave de teste estática |
