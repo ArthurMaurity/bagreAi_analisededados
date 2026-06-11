@@ -139,13 +139,23 @@ class BagreBackend:
     """
 
     def __init__(self):
-        # Migração para a API-Football Oficial v3 do API-Sports / RapidAPI
-        self.base_url = "https://api-football-v1.p.rapidapi.com/v3"
-        api_key = os.getenv("RAPIDAPI_KEY", "")
-        self.headers = {
-            "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
-            "x-rapidapi-key": api_key,
-        }
+        # Suporta tanto chave direta da API-Sports quanto via RapidAPI
+        api_key = os.getenv("RAPIDAPI_KEY", "").strip()
+        self.season = os.getenv("SEASON", "2024").strip()
+        
+        # Chaves diretas da API-Sports possuem exatamente 32 caracteres hexadecimais
+        import re
+        if api_key and re.match(r"^[0-9a-f]{32}$", api_key):
+            self.base_url = "https://v3.football.api-sports.io"
+            self.headers = {
+                "x-apisports-key": api_key,
+            }
+        else:
+            self.base_url = "https://api-football-v1.p.rapidapi.com/v3"
+            self.headers = {
+                "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
+                "x-rapidapi-key": api_key,
+            }
 
     def _executar_get(self, url, params=None, headers=None):
         """
@@ -178,11 +188,11 @@ class BagreBackend:
     def buscar_jogador(self, nome_jogador):
         """Localiza o perfil e o ID único de um atleta na API-Football v3."""
         # Se a chave for placeholder, cai direto no mock para evitar erros 401
-        api_key = self.headers.get("x-rapidapi-key", "")
+        api_key = self.headers.get("x-rapidapi-key") or self.headers.get("x-apisports-key") or ""
         if not api_key or "your_rapidapi_key_here" in api_key:
             return self._buscar_jogador_mock(nome_jogador)
 
-        result = self._executar_get(f"{self.base_url}/players", {"search": nome_jogador, "season": "2025"})
+        result = self._executar_get(f"{self.base_url}/players", {"search": nome_jogador, "season": self.season})
         if result and result.get("response"):
             suggestions = []
             for item in result["response"]:
@@ -204,7 +214,12 @@ class BagreBackend:
                     "suggestions": suggestions
                 }
             }
-        return self._buscar_jogador_mock(nome_jogador)
+        return {
+            "status": "success",
+            "response": {
+                "suggestions": []
+            }
+        }
 
     def _buscar_jogador_mock(self, nome_jogador):
         nome_lower = nome_jogador.lower()
@@ -262,14 +277,14 @@ class BagreBackend:
 
     def obter_detalhes_jogador(self, player_id):
         """Recupera estatísticas do jogador por ID na API-Football v3."""
-        api_key = self.headers.get("x-rapidapi-key", "")
+        api_key = self.headers.get("x-rapidapi-key") or self.headers.get("x-apisports-key") or ""
         if not api_key or "your_rapidapi_key_here" in api_key:
             return self._obter_detalhes_jogador_mock(player_id)
         
-        result = self._executar_get(f"{self.base_url}/players", {"id": player_id, "season": "2025"})
+        result = self._executar_get(f"{self.base_url}/players", {"id": player_id, "season": self.season})
         if result and result.get("response"):
             return result
-        return self._obter_detalhes_jogador_mock(player_id)
+        return {"response": []}
 
     def obter_estatisticas_partida(self, event_id):
         """Coleta dados táticos detalhados de um jogo específico (mantido por compatibilidade)."""
@@ -323,6 +338,10 @@ class BagreBackend:
         Consulta o valor de mercado atualizado via API do Transfermarkt (RapidAPI).
         Cai automaticamente no Scraper Nativo (Opção A) se a chave for inválida ou falhar.
         """
+        # Se for chave direta da API-Sports, não funciona na RapidAPI do Transfermarkt; cai no scraper
+        if "x-apisports-key" in self.headers:
+            return self.obter_valor_mercado_scraped(nome_jogador)
+
         api_key = self.headers.get("x-rapidapi-key", "")
         if not api_key or "your_rapidapi_key_here" in api_key:
             return self.obter_valor_mercado_scraped(nome_jogador)
@@ -400,11 +419,11 @@ class BagreBackend:
         Lista jogadores vinculados a um ID de time com suas estatísticas de Gols e Assists.
         Usa o endpoint /players da API-Football v3 restringindo por clube e temporada.
         """
-        api_key = self.headers.get("x-rapidapi-key", "")
+        api_key = self.headers.get("x-rapidapi-key") or self.headers.get("x-apisports-key") or ""
         if not api_key or "your_rapidapi_key_here" in api_key:
             return self._listar_elenco_clube_mock(team_id)
 
-        result = self._executar_get(f"{self.base_url}/players", {"team": team_id, "season": "2025"})
+        result = self._executar_get(f"{self.base_url}/players", {"team": team_id, "season": self.season})
         if result and result.get("response"):
             members = []
             for item in result["response"]:
@@ -422,7 +441,7 @@ class BagreBackend:
                 })
             return {"response": {"squad": [{"members": members}]}}
 
-        return self._listar_elenco_clube_mock(team_id)
+        return {"response": {"squad": [{"members": []}]}}
 
     def _listar_elenco_clube_mock(self, team_id):
         members = [
