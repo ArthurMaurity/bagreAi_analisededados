@@ -61,7 +61,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -77,8 +77,9 @@ def get_current_user(x_api_key: Optional[str] = Header(None, alias="X-API-Key"))
     Se a chave for omitida ou inválida, retorna um usuário 'mestre' com plano Diretor
     para não bloquear a execução local ou em novos ambientes.
     """
-    # Se não houver chave, tenta usar a chave padrão de Diretor
-    key_to_use = x_api_key or "920996aa-e49f-4613-8b74-1015d1397658"
+    # Se não houver chave, tenta usar a chave padrão de Diretor (definida no .env)
+    default_key = os.getenv("DEFAULT_DIRETOR_KEY", "920996aa-e49f-4613-8b74-1015d1397658")
+    key_to_use = x_api_key or default_key
     
     usuario = db.autenticar(key_to_use)
     
@@ -262,7 +263,7 @@ def search_v1(
 
 # ── TIER VÁRZEA — SCOUT ────────────────────────────────────────────────────────
 @app.get("/v1/scout", tags=["Várzea (free)"])
-@limiter.limit("10/minute")
+@limiter.limit("30/minute")
 def scout(
     request: Request,
     nome: str = Query(..., description="Nome do jogador"),
@@ -304,7 +305,6 @@ def scout(
 
 # ── TIER OLHEIRO — HYPE INDEX ──────────────────────────────────────────────────
 @app.post("/v1/analytics/hype-index", tags=["Olheiro"])
-@limiter.limit("5/minute")
 def hype_index(request: Request, req: HypeIndexRequest, usuario: dict = Depends(get_current_user)):
     """
     **Tier mínimo: olheiro.**
@@ -317,18 +317,24 @@ def hype_index(request: Request, req: HypeIndexRequest, usuario: dict = Depends(
         raise HTTPException(status_code=422,
                             detail="Mínimo de 3 jogadores para análise de regressão.")
 
-    df = pd.DataFrame([j.model_dump() for j in req.jogadores])
-    resultado_df = analisar_hype_index(df)
-    grafico_url  = _copiar_grafico("hype_index.png", "hype")
+    try:
+        df = pd.DataFrame([j.model_dump() for j in req.jogadores])
+        resultado_df = analisar_hype_index(df)
+        grafico_url  = _copiar_grafico("hype_index.png", "hype")
 
-    registros = resultado_df[
-        ["nome", "valor_milhoes", "performance", "valor_previsto", "residuo", "classificacao"]
-    ].to_dict("records")
+        registros = resultado_df[
+            ["nome", "valor_milhoes", "performance", "valor_previsto", "residuo", "classificacao"]
+        ].to_dict("records")
 
-    output = {"jogadores": registros, "grafico_url": grafico_url}
-    db.salvar_analise(usuario["id"], "hype_index",
-                      {"n_jogadores": len(req.jogadores)}, output)
-    return output
+        output = {"jogadores": registros, "grafico_url": grafico_url}
+        if usuario.get("id", 0) > 0:
+            db.salvar_analise(usuario["id"], "hype_index",
+                              {"n_jogadores": len(req.jogadores)}, output)
+        return output
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ── TIER OLHEIRO — ESPELHO PEDIGREE ───────────────────────────────────────────
@@ -400,7 +406,7 @@ def golden_list_endpoint(
     resultado = golden_list(pool=pool, top_n=top_n)
 
     if not resultado:
-        raise HTTPException(status_code=404, detail="Nenhum Pedigree encontrado acima da média do pool informado.")
+        raise HTTPException(status_code=404, detail="Nenhum jogador encontrado no pool informado.")
 
     output = {
         "total_pedigrees": len(resultado),

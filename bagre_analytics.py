@@ -186,7 +186,7 @@ def analisar_hype_index(df: pd.DataFrame, img_path: str = None, light_theme: boo
     Classifica por resíduo: PediRato (>+1σ), Pedigree (<-1σ), Regular.
 
     Input:  DataFrame com colunas [nome, valor_milhoes, gols, assists]
-    Output: DataFrame com colunas adicionais [performance, valor_predito, residuo, classificacao]
+    Output: DataFrame com colunas adicionais [performance, valor_previsto, residuo, classificacao]
     """
     required = {"nome", "valor_milhoes", "gols", "assists"}
     if not required.issubset(df.columns):
@@ -207,10 +207,15 @@ def analisar_hype_index(df: pd.DataFrame, img_path: str = None, light_theme: boo
     inter = float(modelo.intercept_)
     r2    = float(modelo.score(X, y))
 
-    df["valor_previsto"] = modelo.predict(X).round(2)
-    df["residuo"]        = (df["valor_milhoes"] - df["valor_previsto"]).round(2)
+    # Garante que a coluna tenha o nome correto e seja 1D
+    preds = modelo.predict(X).flatten()
+    df["valor_previsto"] = np.round(preds, 2)
+    df["residuo"]        = np.round(df["valor_milhoes"] - df["valor_previsto"], 2)
 
     std = float(df["residuo"].std())
+    if np.isnan(std) or std == 0:
+        std = 0.001  # Evita std zero ou NaN
+        
     df["classificacao"] = df["residuo"].apply(
         lambda r: "PediRato" if r > std else ("Pedigree" if r < -std else "Regular")
     )
@@ -233,7 +238,8 @@ def analisar_hype_index(df: pd.DataFrame, img_path: str = None, light_theme: boo
     print(pedigrees.to_string(index=False) if not pedigrees.empty else "  Nenhum.")
     print("=" * 65)
 
-    # ── Gráfico (seaborn scatter + matplotlib reta) ────────────────────────────
+    # ── Gráfico (comentado para debug radical) ────────────────────────────────
+    """
     if not img_path:
         img_path = os.path.join(STATIC_DIR, "hype_index.png")
     
@@ -296,6 +302,7 @@ def analisar_hype_index(df: pd.DataFrame, img_path: str = None, light_theme: boo
     plt.savefig(img_path, dpi=150, facecolor=c_bg)
     plt.close()
     print(f"  Gráfico salvo: {img_path}\n")
+    """
 
     return df
 
@@ -476,8 +483,7 @@ _GOLDEN_POOL_PADRAO = [
 def golden_list(pool=None, top_n=10):
     """
     Ranking dos melhores Pedigrees de um pool.
-    Filtra jogadores com PediRato acima da média do pool,
-    ordena por PediRato descrescente e retorna os top_n.
+    Ordena por PediRato descrescente e retorna os top_n.
 
     Input:  lista de dicts [nome, gols, assists, valor_milhoes]  (None → dataset padrão)
     Output: lista de dicts com posicao, nome, stats, pedirato, classificacao

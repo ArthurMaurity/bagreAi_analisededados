@@ -258,6 +258,11 @@ class BagreDatabase:
             for row in rows:
                 try:
                     d = json.loads(row["dados_json"])
+                    # Preserva se a fonte for csv_import (mesmo com stats zero)
+                    fonte = d.get("fonte", "")
+                    if "csv_import" in fonte:
+                        continue
+
                     if (
                         d.get("gols", 1) == 0
                         and d.get("assists", 1) == 0

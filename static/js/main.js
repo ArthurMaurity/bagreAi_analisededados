@@ -58,8 +58,8 @@ function buildHypeChart(canvasId, d){
     const cls = grupos[j.classificacao] ? j.classificacao : 'Regular';
     grupos[cls].push({x:j.performance, y:j.valor_milhoes, nome:j.nome});
   });
-  // Reta de regressão = pontos (performance, valor_predito) ordenados por x.
-  const reta = js.map(j=>({x:j.performance, y:j.valor_predito})).sort((a,b)=>a.x-b.x);
+  // Reta de regressão = pontos (performance, valor_previsto) ordenados por x.
+  const reta = js.map(j=>({x:j.performance, y:j.valor_previsto})).sort((a,b)=>a.x-b.x);
   const datasets = [];
   ['Pedigree','Regular','PediRato'].forEach(cls=>{
     if(grupos[cls].length) datasets.push({
@@ -425,7 +425,12 @@ async function fetchScouts(names, outEl){
     api('GET',`/v1/scout?nome=${encodeURIComponent(n)}`).catch(e=>({status:'error',nome:n,_err:e}))
   ));
   const valid=[], warns=[];
-  results.forEach((r,i)=>{ if(r.status==='success') valid.push(r); else warns.push(names[i]); });
+  results.forEach((r,i)=>{
+    if(r.status==='success' && r.gols!=null && r.assists!=null && r.valor_milhoes!=null && r.valor_milhoes>0)
+      valid.push(r);
+    else
+      warns.push(names[i]);
+  });
   let warnHtml='';
   if(warns.length) warnHtml=warns.map(n=>`<div class="w" style="color:#ffd700;font-size:.82rem">⚠️ Sem dados para '${esc(n)}' — ignorado</div>`).join('');
   outEl.innerHTML=warnHtml;
@@ -645,10 +650,12 @@ function renderScout(el, d, nome){
 }
 
 function renderSug(el, sugs){
-  const items = sugs.map((s,i)=>`
-    <li onclick="doScout('${esc(s.nome||s.name||s)}')">
-      <span class="sug-n">${i+1}</span><span>${esc(s.nome||s.name||JSON.stringify(s))}</span>
-    </li>`).join('');
+  const items = sugs.map((s,i)=>{
+    const nome = s.nome||s.name||String(s);
+    return `<li onclick="doScout(decodeURIComponent('${encodeURIComponent(nome)}'))">
+      <span class="sug-n">${i+1}</span><span>${esc(nome)}</span>
+    </li>`;
+  }).join('');
   el.innerHTML=`<div class="card" style="margin-top:14px">
     <div class="ctitle">Múltiplos encontrados — selecione:</div>
     <ul class="sug-list">${items}</ul></div>`;
