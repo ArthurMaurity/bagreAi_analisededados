@@ -40,38 +40,89 @@ button { cursor: pointer; }
 ::-webkit-scrollbar-track { background: var(--panel); }
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
 
-/* ── LOGIN ───────────────────────────────────────────────────── */
+/* ── LOGIN / SELEÇÃO DE PLANO ─────────────────────────────────── */
 #login-screen {
   position: fixed; inset: 0; display: flex;
   align-items: center; justify-content: center;
-  background: var(--bg); z-index: 1000;
+  background: var(--bg); z-index: 1000; overflow-y: auto;
 }
 #login-screen.hidden { display: none; }
-.lcard {
-  background-color: var(--panel);
-  background-image: 
-    repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,.3) 2px, rgba(0,0,0,.3) 4px),
-    repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(0,0,0,.3) 2px, rgba(0,0,0,.3) 4px);
-  border: var(--border); border-radius: 8px;
-  padding: 48px 40px; width: 420px; text-align: center; box-shadow: var(--glow);
+
+.plan-select-wrap {
+  text-align: center; padding: 40px 20px; width: 100%; max-width: 900px;
 }
-.llogo { font-size: 2.8rem; font-weight: 700; letter-spacing: 4px;
-         color: var(--green); text-shadow: var(--glow); margin-bottom: 6px; }
+.llogo { margin-bottom: 4px; }
 .lsub  { color: var(--muted); font-size: .82rem; letter-spacing: 2px;
-         text-transform: uppercase; margin-bottom: 36px; }
-.llbl  { display: block; text-align: left; font-size: .7rem; letter-spacing: 2px;
-         text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
-#apikey-input {
-  width: 100%; padding: 12px 14px; background: var(--bg); color: var(--white);
-  border: 1px solid #444; border-radius: 4px; font-size: .9rem; letter-spacing: 1px;
-  margin-bottom: 18px; transition: border-color .2s;
+         text-transform: uppercase; margin-bottom: 28px; }
+.plan-title {
+  font-size: 1rem; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 28px;
 }
-#apikey-input:focus { outline: none; border-color: var(--green); box-shadow: var(--glow-sm); }
-#login-btn {
-  width: 100%; padding: 13px; background: var(--green); color: #000;
-  border: none; border-radius: 4px; font-size: 1rem; font-weight: 700;
-  letter-spacing: 3px; text-transform: uppercase; transition: box-shadow .2s;
+
+.plan-cards {
+  display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
 }
-#login-btn:hover { box-shadow: var(--glow); }
-#login-error { margin-top: 12px; color: var(--red); font-size: .84rem; min-height: 18px; }
+
+.plan-card {
+  background: var(--panel);
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 28px 24px 24px;
+  width: 240px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s, transform .15s;
+  position: relative;
+}
+.plan-card:hover {
+  border-color: var(--green);
+  box-shadow: 0 0 18px rgba(57,255,20,.25);
+  transform: translateY(-4px);
+}
+.plan-card--featured {
+  border-color: var(--green);
+  box-shadow: 0 0 14px rgba(57,255,20,.2);
+}
+
+.plan-badge {
+  display: inline-block; font-size: .65rem; font-weight: 700;
+  letter-spacing: 2px; padding: 3px 10px; border-radius: 20px;
+  background: #333; color: var(--muted); text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.plan-badge--green { background: var(--green); color: #000; }
+.plan-badge--gold  { background: #d4a017; color: #000; }
+
+.plan-name {
+  font-size: 1.6rem; font-weight: 700; letter-spacing: 2px;
+  color: var(--white); text-transform: uppercase; margin-bottom: 8px;
+}
+.plan-price {
+  font-size: 2rem; font-weight: 700; color: var(--green);
+  margin-bottom: 20px; line-height: 1;
+}
+.plan-price span { font-size: .85rem; color: var(--muted); font-weight: 400; }
+
+.plan-perks {
+  list-style: none; margin-bottom: 24px; text-align: left;
+}
+.plan-perks li {
+  font-size: .85rem; color: var(--muted); padding: 5px 0;
+  border-bottom: 1px solid #222;
+}
+.plan-perks li::before { content: '✓ '; color: var(--green); font-weight: 700; }
+
+.plan-btn {
+  width: 100%; padding: 10px; border: 1px solid #555; border-radius: 4px;
+  background: transparent; color: var(--white); font-size: .85rem;
+  font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  transition: background .2s, border-color .2s, color .2s;
+}
+.plan-btn:hover        { background: #333; border-color: var(--white); }
+.plan-btn--green       { background: var(--green); color: #000; border-color: var(--green); }
+.plan-btn--green:hover { box-shadow: var(--glow); }
+.plan-btn--gold        { background: #d4a017; color: #000; border-color: #d4a017; }
+.plan-btn--gold:hover  { box-shadow: 0 0 12px #d4a01780; }
+
+#login-error { margin-top: 20px; color: var(--red); font-size: .84rem; min-height: 18px; }
 

@@ -16,15 +16,54 @@
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- SELEÇÃO DE PLANO -->
 <div id="login-screen">
-  <div class="lcard">
-    <div class="llogo"><img src="/static/img/logo.png" alt="BAGRE.AI Logo" style="width: 100%; max-width: 280px; height: auto; display: block; margin: 0 auto 15px; object-fit: contain; mix-blend-mode: screen;"></div>
+  <div class="plan-select-wrap">
+    <div class="llogo"><img src="/static/img/logo.png" alt="BAGRE.AI Logo" style="width:100%;max-width:240px;height:auto;display:block;margin:0 auto 8px;object-fit:contain;mix-blend-mode:screen;"></div>
     <div class="lsub">Inteligência de Mercado no Futebol</div>
-    <label class="llbl" for="apikey-input">Sua API Key</label>
-    <input id="apikey-input" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-           autocomplete="off" spellcheck="false">
-    <button id="login-btn" onclick="doLogin()">ACESSAR SISTEMA</button>
+    <div class="plan-title">Selecione seu plano para acessar</div>
+    <div class="plan-cards">
+
+      <div class="plan-card" onclick="doLogin('3d5d355c-0f8e-4e34-8c48-7f2163c63a2e')">
+        <div class="plan-badge">GRATUITO</div>
+        <div class="plan-name">Várzea</div>
+        <div class="plan-price">R$ 0</div>
+        <ul class="plan-perks">
+          <li>Scout de jogador</li>
+          <li>Pedigree da semana</li>
+          <li>5 análises por dia</li>
+        </ul>
+        <button class="plan-btn">ENTRAR</button>
+      </div>
+
+      <div class="plan-card plan-card--featured" onclick="doLogin('bc066b0a-2fb3-40ec-8714-e182a5109c75')">
+        <div class="plan-badge plan-badge--green">POPULAR</div>
+        <div class="plan-name">Olheiro</div>
+        <div class="plan-price">R$ 29<span>/mês</span></div>
+        <ul class="plan-perks">
+          <li>Tudo do Várzea</li>
+          <li>Hype Index completo</li>
+          <li>Espelho Pedigree</li>
+          <li>50 análises por dia</li>
+        </ul>
+        <button class="plan-btn plan-btn--green">ENTRAR</button>
+      </div>
+
+      <div class="plan-card" onclick="doLogin('920996aa-e49f-4613-8b74-1015d1397658')">
+        <div class="plan-badge plan-badge--gold">B2B</div>
+        <div class="plan-name">Diretor</div>
+        <div class="plan-price">R$ 997<span>/mês</span></div>
+        <ul class="plan-perks">
+          <li>Tudo do Olheiro</li>
+          <li>Ciclo de Vida</li>
+          <li>Relatórios .docx</li>
+          <li>Golden List</li>
+          <li>Ilimitado</li>
+        </ul>
+        <button class="plan-btn plan-btn--gold">ENTRAR</button>
+      </div>
+
+    </div>
     <div id="login-error"></div>
   </div>
 </div>
@@ -327,6 +366,27 @@
 
 </div><!-- /app -->
 
+<script>
+// Exposto antes do módulo para garantir que onclick funcione mesmo se o módulo ainda estiver carregando
+function doLogin(key) {
+  var cards = document.querySelectorAll('.plan-card');
+  cards.forEach(function(c){ c.style.pointerEvents='none'; c.style.opacity='.5'; });
+  var err = document.getElementById('login-error');
+  if(err) err.textContent = 'Conectando...';
+
+  fetch('/v1/me', { headers: { 'X-API-Key': key, 'Content-Type': 'application/json' } })
+    .then(function(r){ return r.json().then(function(d){ return {ok: r.ok, d: d}; }); })
+    .then(function(res){
+      if(!res.ok){ throw new Error(res.d.detail || 'Erro de autenticação'); }
+      sessionStorage.setItem('bagre_key', key);
+      window.location.reload();
+    })
+    .catch(function(e){
+      cards.forEach(function(c){ c.style.pointerEvents=''; c.style.opacity=''; });
+      if(err) err.textContent = e.message || 'Erro ao conectar.';
+    });
+}
+</script>
 <script type="module" src="/static/js/main.js"></script>
 
   <script>lucide.createIcons();</script>

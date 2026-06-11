@@ -110,13 +110,9 @@ function buildCicloChart(canvasId, d){
 
 
 /* LOGIN */
-$('apikey-input').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
-
-async function doLogin(){
-  const k = $('apikey-input').value.trim();
-  if(!k) return $('login-error').textContent='Informe sua API key.';
-  $('login-btn').disabled = true;
-  $('login-error').textContent = 'Autenticando...';
+async function doLogin(k){
+  if(!k) return;
+  $('login-error').textContent = '';
   try {
     window.K = k;
     const me = await api('GET','/v1/me');
@@ -125,8 +121,8 @@ async function doLogin(){
     boot(me);
   } catch(e) {
     window.K='';
-    $('login-error').textContent = e.status===401 ? 'API key inválida.' : `Erro ${e.status}: ${e.detail}`;
-  } finally { $('login-btn').disabled=false; }
+    $('login-error').textContent = e.status===401 ? 'Erro de autenticação.' : `Erro ${e.status}: ${e.detail}`;
+  }
 }
 
 function doLogout(){
@@ -134,7 +130,7 @@ function doLogout(){
   window.K=''; window.ME=null; window.sessao=[];
   $('app').classList.remove('visible');
   $('login-screen').classList.remove('hidden');
-  $('apikey-input').value=''; $('login-error').textContent='';
+  $('login-error').textContent='';
   updBar();
 }
 
